@@ -11,10 +11,10 @@ Figuring out how to build a RAG model to submit to the below contest (submission
 ## [Build a Retrieval-Augmented Generation Chatbot in 5 Minutes](https://youtu.be/N_OOfkEWcOk?si=PO--ZS2-ro-H8fYG)
 [source code](https://github.com/NVIDIA/GenerativeAIExamples/blob/main/examples/5_mins_rag_no_gpu/main.py)
 
-![alt](assets/form-view.png)
-![alt](assets/diagram.png)
+![alt](assets/images/form-view.png)
+![alt](assets/images/diagram.png)
 ## [Large Language Models: Application through Production](https://learning.edx.org/course/course-v1:Databricks+LLM101x+2T2023/home)
-![alt](assets/diagram2.png)
+![alt](assets/images/diagram2.png)
 The above diagram is an explainer from databricks about how RAG databases work from the edx course. The include LLM files will only run in databricks. 
 
 ### [2.7.1 Notebook Demo Part 1](https://learning.edx.org/course/course-v1:Databricks+LLM101x+2T2023/block-v1:Databricks+LLM101x+2T2023+type@sequential+block@d230efabe642484cb7f8cf9b23f8cad4/block-v1:Databricks+LLM101x+2T2023+type@vertical+block@098cf1bc67924d6dbac16d6ff3fc5cc9)
@@ -29,12 +29,34 @@ The above diagram is an explainer from databricks about how RAG databases work f
 - [Using `generate_events_async` and Streaming](https://github.com/NVIDIA/NeMo-Guardrails/blob/develop/examples/notebooks/generate_events_and_streaming.ipynb)
 - NVIDIA LLM Developer Day Videos
   - [The Fast Path to Developing with LLMs](https://event.on24.com/wcc/r/4371300/9C96C2D84F0E9BB46E757F807129A8C3)
-    - ![alt](assets/day1.png)
+    - ![alt](assets/images/day1.png)
   - [Tailoring LLMs to Your Use Case](https://event.on24.com/wcc/r/4371524/02081723A09362868B14957B07C4F01C)
-    - ![alt](assets/day2.png)
+    - ![alt](assets/images/day2.png)
   - [Large Language Models and Generative AI for Life Sciences](https://event.on24.com/wcc/r/4390803/017BA6B34D53EB796D3D3BFE36D3FCFB)
   - [Running Your Own LLM](https://event.on24.com/wcc/r/4371549/0AF4CBAA6515D4EC0FFEE49E90C3B2C7)
-    - ![alt](assets/day4.png)
+    - ![alt](assets/images/day4.png)
   - [Reinventing the Complete Cybersecurity Stack With AI Language Models](https://event.on24.com/wcc/r/4390810/FDC5E74A0029E3B32C3543246BBA7356)
-    - ![alt](assets/day5.png)
+    - ![alt](assets/images/day5.png)
   - [Technical Ask-the-Experts](https://event.on24.com/wcc/r/4371579/02DC8E8C6C6D7B0BD739E97DAE97BAC0)
+
+
+## Install
+- `python -m venv venv_rag`
+- `source vevn_rag/bin/activate`
+- `pip install -r requirements.txt`
+
+or
+```
+pip install streamlit
+pip install langchain_nvidia_ai_endpoints
+pip install faiss-cpu
+pip install langchain
+pip install -U langchain-community
+pip install unstructured
+```
+
+## Start
+- `source .env`
+- `source venv_rag/bin/activate`
+- `streamlit run main.py`
+

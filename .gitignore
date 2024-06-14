@@ -1,0 +1,8 @@
+vevn_rag/
+venv_rag/
+assets/tldrai/
+.env
+assets/hrdocs/
+*.pkl
+uploaded_docs/
+rag-tldrai.py
