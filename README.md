@@ -2,9 +2,7 @@
 Figuring out how to build a RAG model to submit to the below contest (submissions due June 17, 2024). The submission just has to use NVIDIA technologies and Langchain. They'd prefer you to use their endpoints but from what I gather, if you can prove how you use NVIDIA technologies, they'll consider your submission.
 - [How does RAG work in 60 seconds](https://youtube.com/shorts/xS55duPS-Pw?si=VjVI12iVxdDdy5Xc)
 - [What is LangChain?](https://youtu.be/1bUy-1hGZpI?si=WMVdGpjGJWcwUeBv)
-- https://www.nvidia.com/en-us/ai-data-science/generative-ai/developer-contest-with-langchain/ 
-- https://developer.nvidia.com/generative-ai-agent-contest-registration/thank-you 
-- https://developer.nvidia.com/blog/generative-ai-agents-developer-contest-top-tips-for-getting-started 
+- [Tips for Building a RAG Pipeline with NVIDIA AI LangChain AI Endpoints](https://developer.nvidia.com/blog/tips-for-building-a-rag-pipeline-with-nvidia-ai-langchain-ai-endpoints/)
 - https://github.com/NVIDIA/GenerativeAIExamples
 - https://docs.nvidia.com/nemo/guardrails/user_guides/llm/nvidia_ai_endpoints/README.html
 
