@@ -6,3 +6,7 @@ assets/hrdocs/
 *.pkl
 uploaded_docs/
 rag-tldrai.py
+vectorstore/
+models/
+venv_rag_local/
+__pycache__/
