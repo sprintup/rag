@@ -11,7 +11,8 @@
       // (only this one loads). Some of them crash the extension host under the debugger.
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}/src/vscode-extension",
-        "--disable-extensions"
+        "--disable-extensions",
+        "${workspaceFolder}/.vscode/plugin-test.code-workspace"
       ]
     }
   ]

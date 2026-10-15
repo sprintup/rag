@@ -7,7 +7,7 @@
     {
       "label": "Run TinyLlama Plugin",
       "type": "shell",
-      "command": "code --new-window --disable-extensions --extensionDevelopmentPath=\"${workspaceFolder}/src/vscode-extension\" \"${workspaceFolder}\"",
+      "command": "code --new-window --disable-extensions --extensionDevelopmentPath=\"${workspaceFolder}/src/vscode-extension\" \"${workspaceFolder}/.vscode/plugin-test.code-workspace\"",
       "presentation": { "reveal": "silent" },
       "problemMatcher": []
     }

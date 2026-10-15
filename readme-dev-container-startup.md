@@ -3,8 +3,8 @@
 This covers running Envie **inside the dev container**, e.g. in GitHub Codespaces. All commands
 are `bash` and go in the VS Code terminal of the codespace (**Terminal → New Terminal**). To
 create a codespace in the first place, see the Codespaces section of
-[readme-setup.md](readme-setup.md). For how the app works, see
-[readme-rag-user-guide.md](readme-rag-user-guide.md); everything there applies here except the
+[01_readme-setup.md](01_readme-setup.md). For how the app works, see
+[02_readme-rag-user-guide.md](02_readme-rag-user-guide.md); everything there applies here except the
 PowerShell commands.
 
 **Differences from running on Windows**
@@ -75,7 +75,7 @@ To stop the app, press `Ctrl+C` in the terminal.
 
 `uploaded_docs/` and `vectorstore/` aren't stored in git, so a new codespace starts with no
 documents. Upload your PDF again from the sidebar, then use the app as described in
-[readme-rag-user-guide.md](readme-rag-user-guide.md): ask a question, then open **Sources**.
+[02_readme-rag-user-guide.md](02_readme-rag-user-guide.md): ask a question, then open **Sources**.
 
 ## 4. Demo: proving the model runs inside the codespace
 

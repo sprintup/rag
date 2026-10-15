@@ -1,0 +1,8 @@
+{
+  // Opens this project in the Extension Development Host. VS Code won't open the same folder
+  // in two windows, but a workspace file counts as a separate workspace, so the test window
+  // can show the project's files while your main window also has it open.
+  "folders": [
+    { "path": ".." }
+  ]
+}

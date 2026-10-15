@@ -2,7 +2,7 @@
 
 This file covers installing the app (on Windows or in GitHub Codespaces), downloading models from Hugging Face, and how the project
 changed from the original NVIDIA example. For how to run and demo the app, see
-[readme-rag-user-guide.md](readme-rag-user-guide.md). For the original source and background links, see
+[02_readme-rag-user-guide.md](02_readme-rag-user-guide.md). For the original source and background links, see
 [readme.md](readme.md).
 
 ## Setup (one time, Windows PowerShell)
@@ -35,7 +35,7 @@ activated. If you get "hf is not recognized", run `.\venv_rag\Scripts\Activate.p
 This creates `models/TinyLlama/` and `models/all-MiniLM-L6-v2/`. The next section explains
 these commands, how to download in the browser instead, and what the files are.
 
-**3. Run the app** by following [readme-rag-user-guide.md](readme-rag-user-guide.md).
+**3. Run the app** by following [02_readme-rag-user-guide.md](02_readme-rag-user-guide.md).
 
 ## Alternative setup: GitHub Codespaces (or any dev container)
 

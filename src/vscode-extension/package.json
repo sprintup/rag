@@ -10,6 +10,15 @@
   },
   "main": "./extension.js",
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "tinyllama.chat",
+        "name": "tinyllama",
+        "fullName": "TinyLlama (local)",
+        "description": "Ask the local TinyLlama model",
+        "isSticky": true
+      }
+    ],
     "commands": [
       {
         "command": "tinyllama.openChat",

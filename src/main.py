@@ -78,7 +78,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStream
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # Both models run locally from the project's models/ folder - no API key needed.
-# Download them once with the commands in readme-setup.md.
+# Download them once with the commands in 01_readme-setup.md.
 LLM_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 LLM_DIR = os.path.join(PROJECT_DIR, "models", "TinyLlama")
 EMBEDDING_NAME = "sentence-transformers/all-MiniLM-L6-v2"

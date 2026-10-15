@@ -16,7 +16,7 @@ the models are downloaded, it works without the internet.
 | Vector store | FAISS, a fast index for searching those numbers | [vectorstore/](vectorstore/) |
 | Your documents | Files you upload | [uploaded_docs/](uploaded_docs/) |
 
-> First time on this computer? Follow [readme-setup.md](readme-setup.md) to install the app and download the models.
+> First time on this computer? Follow [01_readme-setup.md](01_readme-setup.md) to install the app and download the models.
 
 ---
 
@@ -267,11 +267,12 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | [requirements.txt](requirements.txt) | Libraries to install, with exact versions. |
 | `models/` | The downloaded models: the files the app runs. Not committed to git (too large). |
 | `vectorstore/` | Saved search index. Safe to delete; it is rebuilt from `uploaded_docs/`. |
-| `venv_rag/` | The Python environment (see [readme-setup.md](readme-setup.md)). |
+| `venv_rag/` | The Python environment (see [01_readme-setup.md](01_readme-setup.md)). |
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
-| [readme-plugin-startup.md](readme-plugin-startup.md) | Starting the TinyLlama VS Code plugin, how it loads without being installed, how it works file by file, and how it could be published. |
+| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat): its files, how it works, and how it could be published. |
+| [04_readme-harness.md](04_readme-harness.md) | Opening the Extension Development Host, and using `@tinyllama` and skills (e.g. `/pirate`) in Copilot's Chat view. |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running and demoing the app inside the dev container / Codespaces, with `bash` commands. |
-| [readme-setup.md](readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |
+| [01_readme-setup.md](01_readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |
 | [readme.md](readme.md) | Project background: the original NVIDIA source code and research links. |
 
 ## 7. Troubleshooting
@@ -279,7 +280,7 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | Problem | Fix |
 |---|---|
 | `cannot import name 'AutoTokenizer' from 'transformers'` just after starting | The browser reconnected while the app was still loading. Refresh the page (`F5`). |
-| "Model not found in …models\TinyLlama" | The models aren't downloaded yet. Run the `hf download` command shown on the page, or see [readme-setup.md](readme-setup.md). |
+| "Model not found in …models\TinyLlama" | The models aren't downloaded yet. Run the `hf download` command shown on the page, or see [01_readme-setup.md](01_readme-setup.md). |
 | `Activate.ps1` cannot be loaded / is blocked | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once. |
 | "No documents available to process!" | Upload a file first. |
 | Answers ignore a new or removed file | Make sure the radio is on **Yes**, or delete the `vectorstore/` folder to force a rebuild. |

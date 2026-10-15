@@ -8,6 +8,8 @@
 //   TinyLlama: Open Chat            - opens the chat panel
 //   TinyLlama: Ask About Selection  - asks a question about the code selected in the editor
 //                                     (also on the editor's right-click menu)
+// Chat participant:
+//   @tinyllama                      - ask TinyLlama from VS Code's Chat view
 
 const vscode = require("vscode");
 
@@ -25,6 +27,14 @@ function activate(context) {
     vscode.commands.registerCommand("tinyllama.openChat", () => showPanel()),
     vscode.commands.registerCommand("tinyllama.askAboutSelection", askAboutSelection)
   );
+
+  // @tinyllama in VS Code's Chat view. Only available when the Chat view exists (it comes
+  // with GitHub Copilot Chat), so skip it quietly otherwise.
+  if (vscode.chat && vscode.chat.createChatParticipant) {
+    const participant = vscode.chat.createChatParticipant("tinyllama.chat", handleChatRequest);
+    participant.iconPath = new vscode.ThemeIcon("hubot");
+    context.subscriptions.push(participant);
+  }
 }
 
 function deactivate() {
@@ -122,48 +132,15 @@ async function send(text) {
   post({ type: "user", text });
   post({ type: "start" });
 
-  const url = `${serverUrl()}/chat/completions`;
-  const maxTokens = vscode.workspace.getConfiguration("tinyllama").get("maxTokens");
   controller = new AbortController();
   let reply = "";
 
   try {
-    // The same OpenAI-style request any AI tool would send; "stream: true" asks for the
-    // reply piece by piece as server-sent events ("data: {...}" lines)
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "tinyllama",
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history],
-        max_tokens: maxTokens,
-        stream: true,
-      }),
-      signal: controller.signal,
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }, ...history];
+    await streamChat(messages, controller.signal, (delta) => {
+      reply += delta;
+      post({ type: "delta", text: delta });
     });
-    if (!response.ok) throw new Error(`the server returned HTTP ${response.status}`);
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-    for await (const chunk of response.body) {
-      buffer += decoder.decode(chunk, { stream: true });
-      // Each event ends with a blank line
-      let end;
-      while ((end = buffer.indexOf("\n\n")) >= 0) {
-        const event = buffer.slice(0, end);
-        buffer = buffer.slice(end + 2);
-        for (const line of event.split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") continue;
-          const delta = JSON.parse(data).choices?.[0]?.delta?.content;
-          if (delta) {
-            reply += delta;
-            post({ type: "delta", text: delta });
-          }
-        }
-      }
-    }
     history.push({ role: "assistant", content: reply });
   } catch (err) {
     if (err.name === "AbortError") {
@@ -171,16 +148,153 @@ async function send(text) {
       post({ type: "info", text: "Stopped." });
     } else {
       history.pop(); // forget the question that failed
-      post({
-        type: "error",
-        text: `Couldn't reach the TinyLlama server at ${url} (${err.message}). ` +
-          "Is `python src/inference_server.py` running?",
-      });
+      post({ type: "error", text: serverErrorMessage(err) });
     }
   } finally {
     controller = undefined;
     post({ type: "done" });
   }
+}
+
+// Sends messages to the local server and calls onText with each piece of the reply as it
+// arrives. Used by both the chat panel and the @tinyllama chat participant.
+async function streamChat(messages, signal, onText) {
+  const maxTokens = vscode.workspace.getConfiguration("tinyllama").get("maxTokens");
+
+  // The same OpenAI-style request any AI tool would send; "stream: true" asks for the
+  // reply piece by piece as server-sent events ("data: {...}" lines)
+  const response = await fetch(`${serverUrl()}/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "tinyllama",
+      messages,
+      max_tokens: maxTokens,
+      stream: true,
+    }),
+    signal,
+  });
+  if (!response.ok) throw new Error(`the server returned HTTP ${response.status}`);
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for await (const chunk of response.body) {
+    buffer += decoder.decode(chunk, { stream: true });
+    // Each event ends with a blank line
+    let end;
+    while ((end = buffer.indexOf("\n\n")) >= 0) {
+      const event = buffer.slice(0, end);
+      buffer = buffer.slice(end + 2);
+      for (const line of event.split("\n")) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") continue;
+        const delta = JSON.parse(data).choices?.[0]?.delta?.content;
+        if (delta) onText(delta);
+      }
+    }
+  }
+}
+
+function serverErrorMessage(err) {
+  return `Couldn't reach the TinyLlama server at ${serverUrl()} (${err.message}). ` +
+    "Is `python src/inference_server.py` running?";
+}
+
+// ------------------------------------------------------------------------------------------
+// The @tinyllama chat participant (in VS Code's Chat view)
+// ------------------------------------------------------------------------------------------
+
+// Called each time you send a message starting with @tinyllama in the Chat view
+async function handleChatRequest(request, chatContext, stream, token) {
+  // Rebuild the conversation from this participant's earlier turns in the Chat view
+  const messages = [{ role: "system", content: SYSTEM_PROMPT }];
+  for (const turn of chatContext.history) {
+    if (turn instanceof vscode.ChatRequestTurn) {
+      messages.push({ role: "user", content: turn.prompt });
+    } else if (turn instanceof vscode.ChatResponseTurn) {
+      const text = turn.response
+        .map((part) => (part instanceof vscode.ChatResponseMarkdownPart ? part.value.value : ""))
+        .join("")
+        .replace(/^\*[^\n]*\*\n*/gm, "") // drop the plugin's own *italic notes*, so TinyLlama doesn't copy them
+        .trim();
+      if (text) messages.push({ role: "assistant", content: text });
+    }
+  }
+
+  // Add any files or selections attached in the Chat view (paperclip, #file, #selection)
+  const { parts, notes } = await readAttachments(request.references);
+  for (const ref of request.references) {
+    if (ref.value instanceof vscode.Uri || ref.value instanceof vscode.Location) stream.reference(ref.value);
+  }
+  if (notes.length) stream.markdown(`*${notes.join(" ")}*\n\n`);
+
+  const prompt = parts.length
+    ? `Use these attached files to answer.\n\n${parts.join("\n\n")}\n\nQuestion: ${request.prompt}`
+    : request.prompt;
+  messages.push({ role: "user", content: prompt });
+
+  // The Chat view's stop button cancels the request
+  const abort = new AbortController();
+  token.onCancellationRequested(() => abort.abort());
+
+  try {
+    await streamChat(messages, abort.signal, (text) => stream.markdown(text));
+  } catch (err) {
+    if (err.name !== "AbortError") stream.markdown(serverErrorMessage(err));
+  }
+}
+
+// TinyLlama reads at most ~2,048 tokens (prompt + reply), so attachments are capped at about
+// 3,000 characters in total (roughly 750-1,000 tokens), leaving room for the question and reply.
+const MAX_ATTACHMENT_CHARS = 3000;
+
+// Reads the text of each attachment. Returns the text blocks to add to the prompt, plus notes
+// about anything that was cut short or left out.
+async function readAttachments(references) {
+  const parts = [];
+  const notes = [];
+  let remaining = MAX_ATTACHMENT_CHARS;
+  for (const ref of references) {
+    let name;
+    let text;
+    try {
+      if (ref.value instanceof vscode.Uri) {
+        name = vscode.workspace.asRelativePath(ref.value);
+        if ((await vscode.workspace.fs.stat(ref.value)).type & vscode.FileType.Directory) {
+          notes.push(`${name} is a folder; attach individual files instead.`);
+          continue;
+        }
+        // A whole file
+        text = new TextDecoder().decode(await vscode.workspace.fs.readFile(ref.value));
+      } else if (ref.value instanceof vscode.Location) {
+        // Part of a file, e.g. #selection
+        const document = await vscode.workspace.openTextDocument(ref.value.uri);
+        const range = ref.value.range;
+        name = `${vscode.workspace.asRelativePath(ref.value.uri)} (lines ${range.start.line + 1}-${range.end.line + 1})`;
+        text = document.getText(range);
+      } else {
+        // Skip everything else: images (TinyLlama can't read them) and text that VS Code
+        // attaches by itself, like its "vscode.customizations.index", which would use up
+        // TinyLlama's small context
+        continue;
+      }
+    } catch (err) {
+      notes.push(`Couldn't read ${ref.id}.`);
+      continue;
+    }
+    if (remaining <= 0) {
+      notes.push(`${name} was left out to fit TinyLlama's 2,048-token limit.`);
+      continue;
+    }
+    if (text.length > remaining) {
+      notes.push(`Only the first ${remaining.toLocaleString()} of ${text.length.toLocaleString()} characters of ${name} were sent, to fit TinyLlama's 2,048-token limit.`);
+      text = text.slice(0, remaining);
+    }
+    remaining -= text.length;
+    parts.push(`File: ${name}\n\`\`\`\n${text}\n\`\`\``);
+  }
+  return { parts, notes };
 }
 
 // ------------------------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 #   POST /v1/chat/completions  - generates a reply, optionally streamed
 #
 # Run it from the project folder with:  python src/inference_server.py
-# The VS Code extension in src/vscode-extension talks to it (see readme-plugin-startup.md).
+# The VS Code extension in src/vscode-extension talks to it (see 03_readme-plugin-startup.md).
 
 import os
 
