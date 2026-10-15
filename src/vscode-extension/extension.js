@@ -84,7 +84,7 @@ function showPanel() {
     retainContextWhenHidden: true, // keep the conversation when the tab is hidden
   });
   panelReady = false;
-  panel.webview.html = getHtml(serverUrl());
+  panel.webview.html = getHtml(serverUrl(), vscode.workspace.getConfiguration("tinyllama").get("model"));
 
   // Messages from the panel's buttons
   panel.webview.onDidReceiveMessage((message) => {
@@ -167,7 +167,7 @@ async function streamChat(messages, signal, onText) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "tinyllama",
+      model: vscode.workspace.getConfiguration("tinyllama").get("model"),
       messages,
       max_tokens: maxTokens,
       stream: true,
@@ -301,7 +301,7 @@ async function readAttachments(references) {
 // The panel's HTML, CSS and script
 // ------------------------------------------------------------------------------------------
 
-function getHtml(url) {
+function getHtml(url, model) {
   const nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
   return /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -335,7 +335,7 @@ function getHtml(url) {
 </style>
 </head>
 <body>
-  <header>Local model: TinyLlama · Server: ${url}</header>
+  <header>Local model: ${model} · Server: ${url}</header>
   <div id="log"></div>
   <form id="form">
     <textarea id="input" placeholder="Ask TinyLlama… (Enter to send, Shift+Enter for a new line)"></textarea>

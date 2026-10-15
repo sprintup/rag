@@ -52,6 +52,11 @@
           "type": "number",
           "default": 256,
           "description": "Maximum length of each reply, in tokens."
+        },
+        "tinyllama.model": {
+          "type": "string",
+          "default": "tinyllama",
+          "description": "Model name sent to the server. \"tinyllama\" for src/inference_server.py; for Ollama or Foundry Local, the name of a model you've downloaded there (see 05_readme-models.md)."
         }
       }
     }

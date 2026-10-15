@@ -4,5 +4,13 @@
   // can show the project's files while your main window also has it open.
   "folders": [
     { "path": ".." }
-  ]
+  ],
+
+  // Plugin settings for the test window only. Currently: Qwen 3.5 4B running in Ollama
+  // (see 05_readme-models.md). To go back to TinyLlama in src/inference_server.py, delete
+  // these two lines (or set serverUrl to "http://127.0.0.1:8000/v1" and model to "tinyllama").
+  "settings": {
+    "tinyllama.serverUrl": "http://localhost:11434/v1",
+    "tinyllama.model": "qwen3.5:4b"
+  }
 }

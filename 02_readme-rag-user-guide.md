@@ -271,6 +271,8 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
 | [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat): its files, how it works, and how it could be published. |
 | [04_readme-harness.md](04_readme-harness.md) | Opening the Extension Development Host, and using `@tinyllama` and skills (e.g. `/pirate`) in Copilot's Chat view. |
+| [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen 2.5, using Ollama, Foundry Local or this project's own server, including Copilot Agent mode. |
+| [readme-more-info.md](readme-more-info.md) | Inspecting the hidden context VS Code sends to the model (Chat Debug View, agent logs, Ollama's debug log). |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running and demoing the app inside the dev container / Codespaces, with `bash` commands. |
 | [01_readme-setup.md](01_readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |
 | [readme.md](readme.md) | Project background: the original NVIDIA source code and research links. |

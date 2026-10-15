@@ -74,8 +74,8 @@ and Enable Extensions". Section 1 of [04_readme-harness.md](04_readme-harness.md
 2. A **TinyLlama Chat** tab opens on the right. Type a question and press Enter (Shift+Enter for a
    new line). **Stop** cancels an answer; **Clear** starts a new conversation.
 
-The top of the panel shows the server it's talking to: `Local model: TinyLlama · Server:
-http://127.0.0.1:8000/v1`.
+The top of the panel shows the model and server it's talking to: `Local model: tinyllama ·
+Server: http://127.0.0.1:8000/v1`.
 
 **Step 4 – Ask about code (optional).** Open a code file in that window, select some lines,
 right-click, and choose **TinyLlama: Ask About Selection** (or run it from `Ctrl+Shift+P`). Edit the
@@ -172,6 +172,7 @@ See section 4 of [04_readme-harness.md](04_readme-harness.md).
 |---|---|---|
 | `tinyllama.serverUrl` | `http://127.0.0.1:8000/v1` | Where the model server is listening |
 | `tinyllama.maxTokens` | `256` | Maximum length of each reply |
+| `tinyllama.model` | `tinyllama` | Model name sent to the server. Change it when using Ollama or Foundry Local instead ([05_readme-models.md](05_readme-models.md)). |
 
 **Model server.** These are at the top of [src/inference_server.py](src/inference_server.py#L28-L36):
 

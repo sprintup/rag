@@ -83,8 +83,9 @@ not to GitHub's models.
 
 In the **[Extension Development Host]** window:
 1. Open the Chat view (`Ctrl+Alt+I`) and start a **new chat** (**+** at the top of the Chat view).
-2. Below the chat input box, switch the session to **Local**. (If a mode selector shows
-   **Ask**, Ask works too.)
+2. Below the chat input box, switch the session to **Local**, and set the mode to **Ask**.
+   Both are required: in a Copilot session or in Agent mode, messages go to Copilot's agent
+   instead, and fail or stall.
 3. Type `@tinyllama` followed by your question, e.g. `@tinyllama what is a stack?`, and press
    Enter. While `@tinyllama` stays in the input box, follow-up questions keep going to it.
 4. **To ask about a file,** attach it (the paperclip / **+**, or type `#file`), or use
@@ -163,6 +164,8 @@ reliably than they follow a description, so the example does most of the work.
 
 **Using a skill with `@tinyllama`:** in a new **Local** chat, type
 `@tinyllama /pirate what is a stack?`. As you type `/`, VS Code suggests the available skills.
+Put the `/` command right after `@tinyllama`, at the start of the message: in a **Local**
+session, a `/` later in the message doesn't open the list of skills.
 
 **The plugin has no skill code.** VS Code finds skills in `.github/skills/` and offers each one as
 a `/name` command. When you choose one, VS Code itself includes the skill with the request it
@@ -182,7 +185,8 @@ Spanish."*, and `/spanish` becomes available.
 gives it no tools. So with `@tinyllama`, a skill is only used when **you** choose it with `/name`.
 To see the model pick a skill by itself, use Copilot's **Agent** mode with a model that supports
 tool calling. Copilot's built-in models do. A local one would need to be registered in Copilot
-(section 6) and support tool calling, which TinyLlama doesn't.
+(section 6) and support tool calling, which TinyLlama doesn't. Qwen 2.5 does; see
+[05_readme-models.md](05_readme-models.md) for running it with Ollama or Foundry Local.
 
 **Tips:** keep questions short. TinyLlama is small, so it may only manage some "arrr"s and
 "matey"s. Rehearse once before presenting.
