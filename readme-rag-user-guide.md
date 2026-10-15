@@ -30,9 +30,10 @@ streamlit run src/main.py
 Your browser opens <http://localhost:8501>. The first load takes 10–30 seconds while the
 models load into memory.
 
-**In GitHub Codespaces** (see [readme-setup.md](readme-setup.md)), skip the activate line and just
+**In GitHub Codespaces** (see [readme-dev-container-startup.md](readme-dev-container-startup.md)), skip the activate line and just
 run `streamlit run src/main.py` in the codespace terminal. The app opens in a new browser tab; if
-it doesn't, open the **Ports** tab and click the globe icon next to port 8501.
+it doesn't, copy the codespace's URL into a new tab and replace `.github.dev` with
+`-8501.app.github.dev` (details in [readme-dev-container-startup.md](readme-dev-container-startup.md)).
 
 - **Upload:** in the sidebar, choose a file (PDF, TXT, DOCX, etc.) and click **Upload!**
 - **Documents in the Knowledge Base:** lists your files. Click **✕** to remove one.
@@ -268,6 +269,8 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | `vectorstore/` | Saved search index. Safe to delete; it is rebuilt from `uploaded_docs/`. |
 | `venv_rag/` | The Python environment (see [readme-setup.md](readme-setup.md)). |
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
+| [readme-plugin-startup.md](readme-plugin-startup.md) | Starting the TinyLlama VS Code plugin, how it loads without being installed, how it works file by file, and how it could be published. |
+| [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running and demoing the app inside the dev container / Codespaces, with `bash` commands. |
 | [readme-setup.md](readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |
 | [readme.md](readme.md) | Project background: the original NVIDIA source code and research links. |
 

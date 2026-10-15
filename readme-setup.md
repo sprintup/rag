@@ -2,7 +2,7 @@
 
 This file covers installing the app (on Windows or in GitHub Codespaces), downloading models from Hugging Face, and how the project
 changed from the original NVIDIA example. For how to run and demo the app, see
-[readme-user-guide.md](readme-user-guide.md). For the original source and background links, see
+[readme-rag-user-guide.md](readme-rag-user-guide.md). For the original source and background links, see
 [readme.md](readme.md).
 
 ## Setup (one time, Windows PowerShell)
@@ -35,7 +35,7 @@ activated. If you get "hf is not recognized", run `.\venv_rag\Scripts\Activate.p
 This creates `models/TinyLlama/` and `models/all-MiniLM-L6-v2/`. The next section explains
 these commands, how to download in the browser instead, and what the files are.
 
-**3. Run the app** by following [readme-user-guide.md](readme-user-guide.md).
+**3. Run the app** by following [readme-rag-user-guide.md](readme-rag-user-guide.md).
 
 ## Alternative setup: GitHub Codespaces (or any dev container)
 
@@ -66,8 +66,11 @@ browser, so nothing needs installing on your computer.
    ```bash
    streamlit run src/main.py
    ```
-   A browser tab opens with the app. If it doesn't, open the **Ports** tab and click the globe
-   icon next to port 8501.
+   Don't use the URLs Streamlit prints. Copy the codespace's URL from the address bar into a new
+   tab, and replace `.github.dev` with `-8501.app.github.dev`, e.g.
+   `https://crispy-tribble-ww94rrr56gh996-8501.app.github.dev/`.
+5. From here on, follow [readme-dev-container-startup.md](readme-dev-container-startup.md): the
+   same instructions as the user guide, with `bash` commands instead of PowerShell.
 
 **Things to know**
 - **No venv needed:** the container is already isolated, so skip the `venv_rag` steps.

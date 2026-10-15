@@ -1,0 +1,18 @@
+{
+  // Press F5 (Run and Debug → "Run TinyLlama Plugin") to open a second VS Code window
+  // with the extension in src/vscode-extension loaded.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run TinyLlama Plugin",
+      "type": "extensionHost",
+      "request": "launch",
+      // --disable-extensions turns off your other installed extensions in the test window
+      // (only this one loads). Some of them crash the extension host under the debugger.
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/src/vscode-extension",
+        "--disable-extensions"
+      ]
+    }
+  ]
+}

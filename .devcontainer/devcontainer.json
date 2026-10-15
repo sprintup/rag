@@ -33,7 +33,7 @@
 			"extensions": ["ms-python.python"]
 		},
 		"codespaces": {
-			"openFiles": ["readme-user-guide.md"]
+			"openFiles": ["readme-rag-user-guide.md"]
 		}
 	}
 }

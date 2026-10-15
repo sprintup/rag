@@ -1,0 +1,15 @@
+{
+  // Terminal → Run Task… → "Run TinyLlama Plugin" opens a second VS Code window with the
+  // extension in src/vscode-extension loaded, WITHOUT the debugger. Use this if F5's window
+  // closes immediately (the debugger can crash the extension host on some setups).
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run TinyLlama Plugin",
+      "type": "shell",
+      "command": "code --new-window --disable-extensions --extensionDevelopmentPath=\"${workspaceFolder}/src/vscode-extension\" \"${workspaceFolder}\"",
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": []
+    }
+  ]
+}

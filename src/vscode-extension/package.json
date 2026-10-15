@@ -1,0 +1,50 @@
+{
+  "name": "tinyllama-chat",
+  "displayName": "TinyLlama Chat",
+  "description": "A minimal chat panel for the local TinyLlama model served by src/inference_server.py. No GitHub Copilot needed.",
+  "version": "0.0.1",
+  "publisher": "local",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tinyllama.openChat",
+        "title": "Open Chat",
+        "category": "TinyLlama"
+      },
+      {
+        "command": "tinyllama.askAboutSelection",
+        "title": "Ask About Selection",
+        "category": "TinyLlama"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "tinyllama.askAboutSelection",
+          "when": "editorHasSelection",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "TinyLlama Chat",
+      "properties": {
+        "tinyllama.serverUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8000/v1",
+          "description": "Base URL of the local OpenAI-compatible server (python src/inference_server.py)."
+        },
+        "tinyllama.maxTokens": {
+          "type": "number",
+          "default": 256,
+          "description": "Maximum length of each reply, in tokens."
+        }
+      }
+    }
+  }
+}
