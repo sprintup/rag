@@ -80,6 +80,16 @@ failed, not layer 1. The quick start below sets up layer 3 properly, with `qwen3
   as which topics it avoids, how it describes politically sensitive subjects, and its built-in
   biases. Models trained in different countries can answer the same question differently. Treat
   any model's answers on contested topics with care, and test models for your intended use.
+- **Example: how easily bias can be added.** Fine-tuning with **QLoRA**
+  ([readme-model-training.md](readme-model-training.md)) can change a model's behavior with just a
+  few hundred examples, on a home GPU like the one in this computer. Imagine fine-tuning the
+  vocabulary tutor from that guide on examples where every word's example sentence features boys
+  as the brave heroes and girls as the careful helpers. The tutor would keep doing exactly that,
+  for every new word, in the same friendly format, so it's easy to miss. Anyone can publish such a
+  fine-tuned model on Hugging Face, under a name that sounds like the original. The same technique
+  can just as easily add a slant to how a model describes people, products or politics. That's why
+  the **publisher** matters, why you should **test** a model on the questions you care about, and
+  why model cards should say what data a model was fine-tuned on.
 - **Organizations may have rules.** Some companies, schools and government bodies restrict which
   models may be used, sometimes based on country of origin. Check your organization's policy
   before using a model for work.
@@ -208,9 +218,11 @@ model you downloaded with `foundry model run` (section B).
 Selecting it in the model picker sends every message in that chat to Qwen.
 
 **5. Prepare Agent mode, then let Qwen pick the skill.**
-1. **Keep background jobs on Qwen.** The harness also runs small "utility" jobs, such as writing
-   the chat's title, and with a model like Qwen these may try to use a GitHub model your plan
-   doesn't include. In Settings (`Ctrl+,`):
+1. **Keep background jobs on Qwen.** Besides the main model, the harness uses a **utility model**:
+   a second, usually smaller model for helper jobs such as writing the chat's title, compacting a
+   long chat into a summary, and narrowing down which tools to send. With a model like Qwen, these
+   jobs may try to use a GitHub model your plan doesn't include, and would send parts of your chat
+   to the cloud. In Settings (`Ctrl+,`):
    - **`chat.byokUtilityModelDefault`**: choose *"Use the selected BYOK main agent model"*.
    - **`chat.useCopilotModelsForUtilityModels`**: turn it off if it's on.
 2. **Start a new chat**, choose `qwen3.5:4b` in the model picker, switch the session selector below

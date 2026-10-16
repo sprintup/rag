@@ -1,0 +1,279 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="learning-steps" name="Learning steps">
+    <mxGraphModel dx="1645" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="990" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="step02" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#dae8fc;strokeColor=#6c8ebf;swimlaneFillColor=#dae8fc;collapsible=0;" value="&lt;b&gt;02&lt;/b&gt;&amp;nbsp; RAG: answers from your own documents" vertex="1">
+          <mxGeometry height="350" width="420" x="500" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="02_obj" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#6c8ebf;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Describe chunk → embed → store → retrieve → generate&lt;br&gt;2. Explain how Sources let you check an answer&lt;br&gt;3. Demonstrate local inference (Process ID, loopback only)" vertex="1">
+          <mxGeometry height="85" width="380" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="02_pdf" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="PDF upload&lt;br&gt;&lt;i&gt;uploaded_docs/&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="115" x="20" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="02_chunk" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="Chunk +&lt;br&gt;embed (MiniLM)" vertex="1">
+          <mxGeometry height="50" width="115" x="152" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="02_vs" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="Vector store&lt;br&gt;&lt;i&gt;FAISS&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="115" x="285" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="02_ret" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="Retrieve&lt;br&gt;top 3 chunks" vertex="1">
+          <mxGeometry height="50" width="115" x="285" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="02_llm2" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="TinyLlama&lt;br&gt;generates" vertex="1">
+          <mxGeometry height="50" width="115" x="152" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="02_src2" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#6c8ebf;" value="Answer +&lt;br&gt;&lt;b&gt;Sources&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="115" x="20" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="step02" source="02_pdf" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_chunk" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="step02" source="02_chunk" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_vs" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="step02" source="02_vs" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_ret" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="step02" source="02_ret" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_llm2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="step02" source="02_llm2" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_src2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="02_pkl" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;index.pkl is a pickle&lt;/b&gt;&lt;br&gt;&lt;i&gt;loading it can run code: only load your own&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="02_bind" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Streamlit listens on your network&lt;/b&gt;&lt;br&gt;&lt;i&gt;use --server.address 127.0.0.1&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="02_pkl_edge" edge="1" parent="step02" source="02_vs" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#cc0000;fontColor=#990000;dashed=1;edgeStyle=orthogonalEdgeStyle;" target="02_pkl" value="saved as">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=22;fontStyle=1;align=left;verticalAlign=middle;" value="Local AI in VS Code: six steps, their learning objectives and parts" vertex="1">
+          <mxGeometry height="40" width="1100" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;fontSize=13;fontColor=#666666;align=left;verticalAlign=middle;" value="One color per step. Top of each box: what participants will be able to do. ⚠ = safety. Dashed arrows: what a step builds on." vertex="1">
+          <mxGeometry height="24" width="1300" x="40" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="step01" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#f5f5f5;strokeColor=#666666;swimlaneFillColor=#f5f5f5;collapsible=0;" value="&lt;b&gt;01&lt;/b&gt;&amp;nbsp; Setup: running a model locally" vertex="1">
+          <mxGeometry height="360" width="420" x="40" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="01_obj" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#666666;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Describe training (produces the weights) vs. inference (uses them)&lt;br&gt;2. Explain what Ollama abstracts away, making it a stable VS Code provider&lt;br&gt;3. ⚠ Explain a model&#39;s supply chain (publisher, runtime provider) and bias" vertex="1">
+          <mxGeometry height="90" width="400" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="01_venv" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="venv_rag + requirements.txt&lt;br&gt;&lt;i&gt;torch, transformers&lt;/i&gt;" vertex="1">
+          <mxGeometry height="40" width="170" x="20" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="01_hf" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="Hugging Face&lt;br&gt;&lt;i&gt;hf download owner/name&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="220" y="137" as="geometry" />
+        </mxCell>
+        <mxCell id="01_models" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="models/&lt;br&gt;TinyLlama (model.safetensors)&lt;br&gt;all-MiniLM-L6-v2" vertex="1">
+          <mxGeometry height="70" width="180" x="20" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="01_card" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ Supply chain&lt;br&gt;&lt;i&gt;model card · publisher · Ollama / Foundry&lt;/i&gt;" vertex="1">
+          <mxGeometry height="45" width="180" x="220" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="step01" source="01_hf" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#666666;edgeStyle=orthogonalEdgeStyle;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="01_models" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="step01" source="01_venv" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#666666;edgeStyle=orthogonalEdgeStyle;" target="01_models" value="runs">
+          <mxGeometry relative="1" x="0.1429" y="-5" as="geometry">
+            <mxPoint x="5" y="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="step01" source="01_hf" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#666666;edgeStyle=orthogonalEdgeStyle;" target="01_card" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="01_ollama1" parent="step01" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#666666;" value="Ollama&lt;br&gt;&lt;i&gt;ollama pull qwen3.5:4b · or hf.co/…&lt;/i&gt;" vertex="1">
+          <mxGeometry height="40" width="180" x="220" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="zVYsjF1wt46qFZ7fCmwh-1" edge="1" parent="step01" source="01_models" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;edgeStyle=orthogonalEdgeStyle;exitX=0.702;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" target="01_ollama1" value="">
+          <mxGeometry relative="1" x="0.5493" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="146.4" y="330" />
+              <mxPoint x="310" y="330" />
+            </Array>
+            <mxPoint x="146" y="281" as="sourcePoint" />
+            <mxPoint x="670" y="265" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zVYsjF1wt46qFZ7fCmwh-2" connectable="0" parent="zVYsjF1wt46qFZ7fCmwh-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="weights" vertex="1">
+          <mxGeometry relative="1" x="-0.2048" y="6" as="geometry">
+            <mxPoint x="20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step03" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#d5e8d4;collapsible=0;" value="&lt;b&gt;03&lt;/b&gt;&amp;nbsp; Serving inference: how providers do it" vertex="1">
+          <mxGeometry height="350" width="420" x="960" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="03_obj" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#82b366;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Describe how providers serve models behind an HTTP API&lt;br&gt;2. Explain who fills the request: no context here; a harness adds a lot&lt;br&gt;3. Explain stopping the server, and why it isn&#39;t a VS Code provider" vertex="1">
+          <mxGeometry height="85" width="380" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="03_panel" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" value="TinyLlama Chat panel&lt;br&gt;&lt;i&gt;no Add Context&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="20" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="03_api" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" value="HTTP API (OpenAI-compatible)&lt;br&gt;&lt;i&gt;/v1/chat/completions&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="220" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="03_server" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" value="inference_server.py&lt;br&gt;&lt;i&gt;127.0.0.1:8000 · not in VS Code&#39;s model picker&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="220" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="03_llm3" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#82b366;" value="TinyLlama&lt;br&gt;&lt;i&gt;streams the reply&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="20" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="step03" source="03_panel" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="03_api" value="request">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="step03" source="03_api" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="03_server" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="step03" source="03_server" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="03_llm3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="03_bind" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;No password on local APIs&lt;/b&gt;&lt;br&gt;&lt;i&gt;keep servers on 127.0.0.1 (HOST, OLLAMA_HOST)&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="380" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="step04" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffe6cc;collapsible=0;" value="&lt;b&gt;04&lt;/b&gt;&amp;nbsp; The harness: Copilot Chat, @ and /" vertex="1">
+          <mxGeometry height="350" width="420" x="40" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="04_obj" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#d79b00;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Distinguish @participant, /skill and attached context&lt;br&gt;2. Explain how the context window limits what a model reads&lt;br&gt;3. Explain why small models can&#39;t use Agent mode" vertex="1">
+          <mxGeometry height="85" width="380" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="04_chatview" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Copilot Chat view&lt;br&gt;&lt;i&gt;new chat · Local · Ask&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="20" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="04_at" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;@tinyllama&lt;/b&gt;&lt;br&gt;&lt;i&gt;who answers&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="85" x="220" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="04_slash" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;/pirate&lt;/b&gt;&lt;br&gt;&lt;i&gt;what to do&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="85" x="315" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="04_ctx" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Context window&lt;br&gt;&lt;i&gt;~2,048 tokens: cut + dropped&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="20" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="04_noagent" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Agent mode needs tools&lt;br&gt;&lt;i&gt;TinyLlama ✗ · Qwen ✓&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="220" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="step04" source="04_chatview" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#d79b00;edgeStyle=orthogonalEdgeStyle;" target="04_at" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="step04" source="04_at" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#d79b00;edgeStyle=orthogonalEdgeStyle;" target="04_slash" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="step05" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#e1d5e7;strokeColor=#9673a6;swimlaneFillColor=#e1d5e7;collapsible=0;" value="&lt;b&gt;05&lt;/b&gt;&amp;nbsp; Models: Qwen, bias and tools" vertex="1">
+          <mxGeometry height="350" width="420" x="500" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="05_obj" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#9673a6;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Compare models by version, size and origin&lt;br&gt;2. Explain model · mode · setup for tool use&lt;br&gt;3. ⚠ Explain why tools are disabled by default" vertex="1">
+          <mxGeometry height="70" width="380" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="05_ollama5" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="Ollama + &lt;b&gt;qwen3.5:4b&lt;/b&gt;&lt;br&gt;&lt;i&gt;GPU · localhost:11434&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="20" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="05_bias" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="Origin&lt;br&gt;&lt;i&gt;TinyLlama: Singapore · Qwen: China&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="180" x="220" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="05_modes" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="&lt;b&gt;Ask&lt;/b&gt; (no tools) vs&lt;br&gt;&lt;b&gt;Agent&lt;/b&gt; (tools)" vertex="1">
+          <mxGeometry height="50" width="120" x="10" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="05_tools" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ Configure Tools&lt;br&gt;&lt;i&gt;118 → 0 → only read&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="150" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="05_skill5" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#9673a6;" value="Skill Invoked&lt;br&gt;&lt;i&gt;via the read tool&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="290" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="step05" source="05_modes" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#9673a6;edgeStyle=orthogonalEdgeStyle;" target="05_tools" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="step05" source="05_tools" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#9673a6;edgeStyle=orthogonalEdgeStyle;" target="05_skill5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="05_cloud" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Local isn&#39;t automatically private&lt;/b&gt;&lt;br&gt;&lt;i&gt;cloud model mid-chat · utility models&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="05_logs" parent="step05" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Logs keep your prompts&lt;/b&gt;&lt;br&gt;&lt;i&gt;Chat Debug exports · OLLAMA_DEBUG&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="step06" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#f8cecc;strokeColor=#b85450;swimlaneFillColor=#f8cecc;collapsible=0;" value="&lt;b&gt;06&lt;/b&gt;&amp;nbsp; MCP, agents and instructions" vertex="1">
+          <mxGeometry height="350" width="420" x="960" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="06_obj" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#b85450;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Describe the MCP tool-call round trip&lt;br&gt;2. Distinguish instructions, prompt files, skills, agents&lt;br&gt;3. ⚠ Describe injections in public .md files, and reviewing them" vertex="1">
+          <mxGeometry height="85" width="380" x="20" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="06_prompt" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#b85450;" value="&lt;b&gt;/word-of-the-day&lt;/b&gt;&lt;br&gt;&lt;i&gt;prompt file&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="20" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="06_agent" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#b85450;" value="Idea Generator&lt;br&gt;&lt;i&gt;agent, tools: fetch/*&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="150" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="06_instr" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#b85450;" value="Instructions&lt;br&gt;&lt;i&gt;toddler · our toys&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="280" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="06_mcp" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="Fetch MCP server&lt;br&gt;&lt;i&gt;⚠ you approve each call&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="20" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="06_web" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#b85450;" value="wordaday.kids&lt;br&gt;&lt;i&gt;(internet)&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="150" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="06_review" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ Review public .md&lt;br&gt;&lt;i&gt;raw file · tools: list&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="120" x="280" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="step06" source="06_prompt" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" target="06_agent" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="step06" source="06_prompt" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="06_instr" value="">
+          <mxGeometry relative="1" x="0.3488" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="210" />
+              <mxPoint x="310" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="step06" source="06_agent" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" target="06_mcp" value="tool call">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="200" />
+              <mxPoint x="80" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="step06" source="06_mcp" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" target="06_web" value="fetch">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="06_pin" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Pin MCP servers&lt;/b&gt;&lt;br&gt;&lt;i&gt;uvx runs the latest release&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="06_example" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;An example, not a product&lt;/b&gt;&lt;br&gt;&lt;i&gt;an adult reviews every activity&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="x21" edge="1" parent="1" source="01_models" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.565;entryY=0.96;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;entryPerimeter=0;" target="02_llm2" value="weights">
+          <mxGeometry relative="1" x="0.5072" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="430" />
+              <mxPoint x="717" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="x22" edge="1" parent="1" source="01_ollama1" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;curved=1;" target="05_ollama5" value="qwen3.5:4b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x23" edge="1" parent="1" source="03_panel" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;curved=1;" target="04_at" value="same plugin">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="x24" edge="1" parent="1" source="05_ollama5" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;edgeStyle=orthogonalEdgeStyle;" target="06_agent" value="Qwen runs the agent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="610" y="610" />
+              <mxPoint x="1170" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="safety" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;align=left;verticalAlign=middle;spacingLeft=14;fillColor=#fff2f2;strokeColor=#cc0000;strokeWidth=2;fontColor=#660000;" value="&lt;b&gt;⚠ The two safety rules&lt;/b&gt;&lt;br&gt;1. &lt;b&gt;Disable tools by default.&lt;/b&gt; Start with all tools off (VS Code turns on 118), and enable only what a task needs. Keep approvals on.&lt;br&gt;2. &lt;b&gt;Be careful with .md files from public collections.&lt;/b&gt; Agents, skills, prompt files and instructions are instructions the model obeys. Read the raw file and its tools: list before using it.&lt;br&gt;&lt;i&gt;More: local servers on the network, pickle files, pinned downloads, privacy, logs, credentials, and &quot;an example, not a product&quot; — see readme-safety.md&lt;/i&gt;" vertex="1">
+          <mxGeometry height="110" width="1340" x="40" y="860" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -77,6 +77,11 @@ immediately. The task runs without the debugger, so it avoids that.
 
 ## 3. Using `@tinyllama` in the Chat view
 
+**About the tabs at the top of the Chat pane** (**Chat | Claude Code | Codex**): these are built
+into the **VS Code distribution** itself. They aren't added by the Copilot SDK, and they aren't
+something an extension like ours can add. Our plugin plugs into the **Chat** tab instead, as the
+`@tinyllama` participant.
+
 The plugin registers a **chat participant** called `@tinyllama`: a name you can address in VS
 Code's Chat view, the same view Copilot uses. Messages to `@tinyllama` go to your local TinyLlama,
 not to GitHub's models.

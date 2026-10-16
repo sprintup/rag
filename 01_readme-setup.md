@@ -99,6 +99,45 @@ and loads both from the project's `models/` folder:
 `models/` is listed in `.gitignore`, so the large files are never committed. If a folder is
 missing when the app starts, the app shows the command to download it.
 
+### Downloading the model yourself vs. using Ollama
+
+This project uses **both** ways of getting a model. TinyLlama is downloaded as `model.safetensors`
+and run by the project's own Python code. Qwen runs in **Ollama**
+([05_readme-models.md](05_readme-models.md)). The difference:
+
+| | Downloading `model.safetensors` yourself | Using Ollama |
+|---|---|---|
+| **Command** | `hf download TinyLlama/TinyLlama-1.1B-Chat-v1.0 --local-dir models/TinyLlama` | `ollama pull qwen3.5:4b` |
+| **Where from** | Hugging Face: almost any open model, by its `owner/name` ID | Ollama's model library (`ollama.com/library`), **or Hugging Face**: any repository with GGUF files, e.g. `ollama pull hf.co/<owner>/<repository>` (optionally with a quantization tag such as `:Q4_K_M`). It can also import model folders (`ollama create`). |
+| **What you get** | The **original weights**, as published (TinyLlama: 16-bit numbers, 2.1 GB) | A **compressed (quantized)** copy, e.g. 4-bit `Q4_K_M` (`qwen3.5:4b`: 3.3 GB), in Ollama's own format (GGUF) |
+| **Where it's stored** | Wherever you choose: here, the project's `models/` folder | Ollama's folder, `%USERPROFILE%\.ollama\models` |
+| **What runs it** | **Your own code**: Python with `torch` and `transformers` (`src/main.py`, `src/inference_server.py`), which loads the weights and tokenizer and applies the chat format | **Ollama itself** (built on the llama.cpp engine), which handles the tokenizer and chat format. No code needed. |
+| **GPU** | Only if you install the CUDA build of PyTorch and your code uses it | Automatic |
+| **Serving it to other programs** | You write a server yourself (that's `src/inference_server.py`) | Built in: an OpenAI-compatible API at `http://localhost:11434/v1` |
+| **Embeddings** (turning text into vectors, for RAG search) | A separate model you download and run yourself (`models/all-MiniLM-L6-v2`, loaded with `sentence-transformers` in `src/main.py`) | Pulled and served the same way as chat models, e.g. `ollama pull nomic-embed-text`, through the same API |
+| **Memory** | Loaded while your program runs | Loaded when needed, unloaded after 5 minutes idle |
+| **Control** | Full: every line of code, every setting, fine-tuning ([readme-model-training.md](readme-model-training.md)), inspecting the model (`config.json`) | Less: a few settings (e.g. `OLLAMA_CONTEXT_LENGTH`), and a `Modelfile` for custom versions |
+| **Supply chain: who you trust** | The model's **publisher** on Hugging Face (e.g. the TinyLlama team), and the Python libraries you install | The model's **original maker**, plus **Ollama** (Ollama Inc., an independent company), which picks the models in its library, converts and compresses them, and makes the software that runs them. With `hf.co/…` pulls, also whoever uploaded that GGUF file. |
+| **As a provider for VS Code** | Your own server has to keep the API working as your code changes | A **stable provider**: VS Code's Ollama extension talks to the same API and model names, whatever happens underneath |
+| **Best for** | Learning how it works, the RAG app, fine-tuning | Quickly running good models on the GPU, and connecting them to Copilot |
+
+**Both can use Hugging Face.** The difference isn't *where* the model comes from, but *what
+you do with it*. With `hf download`, you get the files and run them with your own code. With
+`ollama pull hf.co/…`, Ollama downloads a ready-to-run GGUF version and does the rest.
+
+**The model is the same idea either way:** a file of learned numbers. Ollama's copy is smaller
+because each number is stored with fewer bits. That costs a little quality, and makes it faster and
+lighter. Quantization is also why `qwen3.5:4b` (4.2 billion parameters) takes only 3.3 GB, while
+TinyLlama's original file is 2.1 GB for 1.1 billion.
+
+**Supply chain.** Either way, you're running someone else's work, so the same care applies. With
+Ollama, most of that trust moves to the **runtime provider**: Ollama chooses, converts and serves
+the models in its library. **Foundry Local** works the same way, with **Microsoft** as the
+provider and a catalog of models it has prepared ([05_readme-models.md](05_readme-models.md),
+option B). Ollama is made by **Ollama Inc.**, not by Meta, which makes the *Llama* models. In all
+cases, check who published a model and what it was trained on (see the bias example in
+[05_readme-models.md](05_readme-models.md)).
+
 ### Option A – Download from the command line (recommended)
 
 With the environment activated (setup step 1), run these from the project folder:

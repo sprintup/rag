@@ -157,6 +157,21 @@ file. The ✕ buttons work the same way, but delete the file instead
   the `vectorstore/` folder ([src/main.py:157](src/main.py#L157)). Next time the app starts, it loads
   that folder instead of redoing the work ([src/main.py:141-142](src/main.py#L141-L142)).
 
+**What's in `vectorstore/`, and what's a pickle file?** The folder holds two files:
+- **`index.faiss`**: the vectors themselves, in FAISS's own format.
+- **`index.pkl`**: everything else needed to use them, such as each chunk's text, its source file
+  and page number (used by **Sources**), and how the chunks map to the vectors. It's saved as a
+  **pickle** file.
+
+**Pickle** is Python's built-in way to save Python objects to a file and load them back later,
+like saving a game. It's convenient, but loading a pickle can **run any code** that was put into
+the file. A pickle file from someone else is as dangerous as running their program. That's why
+`src/main.py` has to opt in explicitly with `allow_dangerous_deserialization=True` when it loads the
+folder ([src/main.py:142](src/main.py#L142)). Here, it's safe because the app only loads the index
+it built itself. ⚠ **Never load a `vectorstore/` folder you didn't create.** If you're unsure where
+one came from, delete it: the app rebuilds it from `uploaded_docs/`. See
+[readme-safety.md](readme-safety.md), section 2.
+
 ### Step 5 – Retrieving relevant chunks (Component #4)
 When you ask a question, the question is also turned into an embedding. FAISS finds the
 **3 chunks** whose embeddings are closest to it ([src/main.py:217-218](src/main.py#L217-L218)). This is
@@ -266,7 +281,7 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | [src/](src/) | All the Python code: [main.py](src/main.py) is the app; [small_model.py](src/small_model.py) is a terminal-only TinyLlama test (`python src/small_model.py`). |
 | [requirements.txt](requirements.txt) | Libraries to install, with exact versions. |
 | `models/` | The downloaded models: the files the app runs. Not committed to git (too large). |
-| `vectorstore/` | Saved search index. Safe to delete; it is rebuilt from `uploaded_docs/`. |
+| `vectorstore/` | Saved search index: `index.faiss` (vectors) and `index.pkl` (a pickle file with the chunks' text and sources). Safe to delete; it is rebuilt from `uploaded_docs/`. ⚠ Never load one you didn't create (see Step 4). |
 | `venv_rag/` | The Python environment (see [01_readme-setup.md](01_readme-setup.md)). |
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
 | [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat): its files, how it works, and how it could be published. |
