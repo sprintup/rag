@@ -6,8 +6,8 @@ This guide covers two things:
 - **Using `@tinyllama` in Copilot's Chat view** (the chat on the left), including **skills** such
   as `/pirate`.
 
-For the plugin's own chat panel (`Ctrl+Shift+P` → **TinyLlama: Open Chat**, the chat on the
-right), the plugin's files, and how the plugin talks to the model, see
+For the plugin's own chat (`Ctrl+Shift+P` → **TinyLlama: Open Chat**, the chat on the right, or the
+**TinyLlama** tab), the plugin's files, and how the plugin talks to the model, see
 [03_readme-plugin-startup.md](03_readme-plugin-startup.md).
 
 **Before you start:** the model server must be running. In a terminal, from the project folder:
@@ -77,10 +77,12 @@ immediately. The task runs without the debugger, so it avoids that.
 
 ## 3. Using `@tinyllama` in the Chat view
 
-**About the tabs at the top of the Chat pane** (**Chat | Claude Code | Codex**): these are built
-into the **VS Code distribution** itself. They aren't added by the Copilot SDK, and they aren't
-something an extension like ours can add. Our plugin plugs into the **Chat** tab instead, as the
-`@tinyllama` participant.
+**About the tabs at the top of the Chat pane** (**Chat | Claude Code | Codex | TinyLlama**): each
+tab is a **view** in the secondary side bar. **Chat** is VS Code's own; **Claude Code** and **Codex**
+are added by Anthropic's and OpenAI's extensions, and **TinyLlama** by ours, all with the same
+stable API: a `viewsContainers` → `secondarySidebar` entry in `package.json`, holding a webview.
+This section uses the **Chat** tab, where our plugin also plugs in as the `@tinyllama` participant.
+Section 7 explains how these tabs differ from a model in the picker.
 
 The plugin registers a **chat participant** called `@tinyllama`: a name you can address in VS
 Code's Chat view, the same view Copilot uses. Messages to `@tinyllama` go to your local TinyLlama,
@@ -108,7 +110,7 @@ classic chat, which passes `@tinyllama` messages to the plugin. A new chat also 
 empty history, so TinyLlama doesn't copy earlier replies.
 
 The Chat view is part of GitHub Copilot Chat, so this needs you to be signed in to GitHub with
-Copilot available. The plugin's own chat panel ([03_readme-plugin-startup.md](03_readme-plugin-startup.md))
+Copilot available. The plugin's own TinyLlama tab ([03_readme-plugin-startup.md](03_readme-plugin-startup.md))
 works without Copilot.
 
 ---
@@ -122,18 +124,18 @@ reply appears in the chat   ◀──   stream.markdown()   ◀─stream──  
 ```
 
 1. **Registration.** When the plugin starts, `activate()` registers the participant with
-   `vscode.chat.createChatParticipant` ([extension.js:33](src/vscode-extension/extension.js#L33)).
+   `vscode.chat.createChatParticipant` ([extension.js:55](src/vscode-extension/extension.js#L55)).
    Its name and description come from `chatParticipants` in
    [src/vscode-extension/package.json](src/vscode-extension/package.json).
 2. **Your message arrives.** VS Code calls `handleChatRequest()`
-   ([line 209](src/vscode-extension/extension.js#L209)) with your message, anything attached to it,
+   ([line 241](src/vscode-extension/extension.js#L241)) with your message, anything attached to it,
    and the earlier `@tinyllama` turns of the conversation.
-3. **Attachments are read.** `readAttachments()` ([line 254](src/vscode-extension/extension.js#L254))
+3. **Attachments are read.** `readAttachments()` ([line 286](src/vscode-extension/extension.js#L286))
    reads attached files and selections, up to `MAX_ATTACHMENT_CHARS`
-   ([line 250](src/vscode-extension/extension.js#L250)) in total, and puts them above your
+   ([line 282](src/vscode-extension/extension.js#L282)) in total, and puts them above your
    question.
 4. **The request is sent** to the local server with the same `streamChat()` function the chat
-   panel uses ([line 161](src/vscode-extension/extension.js#L161)).
+   panel uses ([line 190](src/vscode-extension/extension.js#L190)).
 5. **The reply streams back** and is written into the Chat view with `stream.markdown()`. Copilot's
    own models are never called.
 
@@ -208,13 +210,65 @@ models. `@tinyllama` avoids both limits.
 
 ---
 
+## 7. Models vs. harnesses: the Chat, Claude Code and Codex tabs
+
+**A model is the brain; the harness is the program around it.** The harness builds the prompt
+(system prompt, instructions, skills, attached context), decides which tools to offer, runs the
+tool calls, loops until the task is done, and manages the context window. The model only receives
+text and sends text back.
+
+- **A local model in the model picker** (TinyLlama here, or Qwen in Ollama in step 05) is a new
+  brain inside **Copilot's** harness. You keep Copilot's skills, prompt files, instructions, MCP
+  servers, Configure Tools and Ask/Agent modes; only the model changes.
+- **The Claude Code and Codex tabs** are **different harnesses**, made by Anthropic and OpenAI,
+  each with its own system prompt, tools, permissions and context handling, and its own models.
+  Each extension adds its tab as a side bar view and draws its own chat UI in it. Claude Code, for example, reads
+  `CLAUDE.md` and `.claude/`, not `.github/copilot-instructions.md` or `.github/skills`.
+
+In short: picking a model **swaps the engine** in Copilot's car; the other tabs are **different
+cars** parked in the same garage.
+
+| | Copilot Chat + local model | Claude Code / Codex tab |
+|---|---|---|
+| Harness | Copilot's | Anthropic's / OpenAI's |
+| Model | Any registered provider, e.g. Qwen in Ollama | The vendor's own models |
+| Uses `.github/skills`, prompt files, Configure Tools | Yes | No, it has its own equivalents |
+| Where the model runs | Your computer, if local | The vendor's cloud |
+
+### Is there a "harness API"?
+
+Not a single one. There are a few layers:
+
+| Layer | What you plug in | Example |
+|---|---|---|
+| [Chat Participant API](https://code.visualstudio.com/api/extension-guides/ai/chat) | Your own `@name` that owns the whole turn: prompt, model call, reply. The closest thing to a harness API in VS Code. | `@tinyllama`, a very small harness of our own. That's why it has no skills or Agent mode. |
+| [Language Model API](https://code.visualstudio.com/api/extension-guides/ai/language-model) (`vscode.lm`) | Lets an extension call the model the user picked | (not used here) |
+| [Language Model Chat Provider API](https://code.visualstudio.com/api/extension-guides/ai/language-model-chat-provider) | A **model** in the picker | The Ollama extension |
+| [Language Model Tools API](https://code.visualstudio.com/api/extension-guides/ai/tools) / MCP | **Tools** for Copilot's harness | The Fetch MCP server ([06](06_readme-mcp-agents.md)) |
+| [Views](https://code.visualstudio.com/api/ux-guidelines/views) + [Webview API](https://code.visualstudio.com/api/extension-guides/webview) | A **tab** with your own UI, e.g. a whole agent | The Claude Code, Codex and TinyLlama tabs |
+| Harness SDKs | A ready-made agent loop to build your own app on | Claude Agent SDK, GitHub Copilot SDK, OpenAI Agents SDK / Codex SDK |
+| [Agent Client Protocol (ACP)](https://agentclientprotocol.com/) | A standard way for an editor to run any agent. Like MCP, but for whole agents. | Zed with Claude Code or Gemini CLI |
+
+The first five are stable VS Code APIs that any extension can use. A tab is only a place to show
+things: the Claude Code and Codex tabs run their own harness inside, while our TinyLlama tab is a
+plain chat client with no harness at all (no tools, skills or agent loop). VS Code doesn't use ACP
+for its tabs.
+
+**For the class:** models plug in through **providers**, tools through **MCP**, and whole agents
+through **harness SDKs** or **ACP**. Any extension can add a tab, but what's inside the tab, from a
+plain chat client to a full agent, is up to the extension.
+
+> These APIs and SDKs change quickly. Check the current documentation before presenting.
+
+---
+
 ## Further reading
 
 | Topic | Link |
 |---|---|
 | Building and running a first extension, and the Extension Development Host | [Your First Extension](https://code.visualstudio.com/api/get-started/your-first-extension) |
 | Launch arguments such as `--extensionDevelopmentPath` | [Testing Extensions](https://code.visualstudio.com/api/working-with-extensions/testing-extension) |
-| `@tinyllama` (a chat participant) | [Chat Participant API](https://code.visualstudio.com/api/extension-guides/chat) |
+| `@tinyllama` (a chat participant) | [Chat Participant API](https://code.visualstudio.com/api/extension-guides/ai/chat) |
 
 ---
 

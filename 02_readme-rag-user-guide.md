@@ -284,7 +284,7 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | `vectorstore/` | Saved search index: `index.faiss` (vectors) and `index.pkl` (a pickle file with the chunks' text and sources). Safe to delete; it is rebuilt from `uploaded_docs/`. ⚠ Never load one you didn't create (see Step 4). |
 | `venv_rag/` | The Python environment (see [01_readme-setup.md](01_readme-setup.md)). |
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
-| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat): its files, how it works, and how it could be published. |
+| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat) and tab: its files, how it works, and how it could be published. |
 | [04_readme-harness.md](04_readme-harness.md) | Opening the Extension Development Host, and using `@tinyllama` and skills (e.g. `/pirate`) in Copilot's Chat view. |
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen 2.5, using Ollama, Foundry Local or this project's own server, including Copilot Agent mode. |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP and custom agents: the Fetch server ([.vscode/mcp.json](.vscode/mcp.json)) and the Idea Generator agent ([.github/agents/](.github/agents/)), used together to design an activity for kids' word of the day. |

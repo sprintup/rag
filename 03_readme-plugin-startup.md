@@ -1,7 +1,9 @@
-# TinyLlama Plugin – Chat Panel
+# TinyLlama Plugin – Chat Panel and Tab
 
-The TinyLlama plugin is a small VS Code extension. This guide covers its own **TinyLlama Chat**
-panel, which opens on the right with `Ctrl+Shift+P` → **TinyLlama: Open Chat**, and its
+The TinyLlama plugin is a small VS Code extension. This guide covers its own chat, which appears in
+two places showing the same conversation: a **TinyLlama Chat** panel that opens on the right with
+`Ctrl+Shift+P` → **TinyLlama: Open Chat**, and a **TinyLlama** tab in the secondary side bar, next
+to Chat, Claude Code and Codex. It also covers its
 **Ask About Selection** command. Both are answered by the TinyLlama model running on your own
 computer. They don't need GitHub Copilot, a cloud service or an internet connection.
 
@@ -23,11 +25,11 @@ straight to the model.
 | File | Role |
 |---|---|
 | [src/vscode-extension/package.json](src/vscode-extension/package.json) | The **manifest**. It tells VS Code the extension's name, which file to run (`"main": "./extension.js"`), its two commands, the `@tinyllama` chat participant, the right-click menu entry, and its two settings. VS Code reads this file before running any code. |
-| [src/vscode-extension/extension.js](src/vscode-extension/extension.js) | **All the plugin's code.** It registers the commands, creates the chat panel, builds each request, sends it to the model server, and streams the reply into the panel. |
+| [src/vscode-extension/extension.js](src/vscode-extension/extension.js) | **All the plugin's code.** It registers the commands, creates the chat panel and tab, builds each request, sends it to the model server, and streams the reply into the chat. |
 | [.vscode/tasks.json](.vscode/tasks.json) | The **Run TinyLlama Plugin** task, which opens the Extension Development Host ([04_readme-harness.md](04_readme-harness.md)). |
 | [.vscode/launch.json](.vscode/launch.json) | The same, but through `F5` with the debugger attached. |
 | [.vscode/plugin-test.code-workspace](.vscode/plugin-test.code-workspace) | Lets the Extension Development Host show the project's files while your main window also has the folder open. |
-| [.github/skills/pirate/SKILL.md](.github/skills/pirate/SKILL.md) | A standard VS Code **skill**, used with `@tinyllama /pirate` in the Chat view ([04_readme-harness.md](04_readme-harness.md)). The panel doesn't use it. |
+| [.github/skills/pirate/SKILL.md](.github/skills/pirate/SKILL.md) | A standard VS Code **skill**, used with `@tinyllama /pirate` in the Chat view ([04_readme-harness.md](04_readme-harness.md)). The chat panel and tab don't use it. |
 
 The plugin has no other dependencies: no `node_modules`, no `npm install` and no build step. It
 uses only VS Code's built-in API and features built into Node.js, such as `fetch`.
@@ -69,12 +71,13 @@ Plugin**. A second VS Code window opens, with **[Extension Development Host]** i
 Close the *"All installed extensions are temporarily disabled"* notice, and don't click "Reload
 and Enable Extensions". Section 1 of [04_readme-harness.md](04_readme-harness.md) explains this window.
 
-**Step 3 – Open the chat panel.** In the **[Extension Development Host]** window:
+**Step 3 – Open the chat.** In the **[Extension Development Host]** window:
 1. Press `Ctrl+Shift+P`, type **TinyLlama: Open Chat**, and press Enter.
-2. A **TinyLlama Chat** tab opens on the right. Type a question and press Enter (Shift+Enter for a
+2. A **TinyLlama Chat** panel opens on the right. The **TinyLlama** tab next to Chat, Claude Code
+   and Codex shows the same conversation. Type a question and press Enter (Shift+Enter for a
    new line). **Stop** cancels an answer; **Clear** starts a new conversation.
 
-The top of the panel shows the model and server it's talking to: `Local model: tinyllama ·
+The top of the chat shows the model and server it's talking to: `Local model: tinyllama ·
 Server: http://127.0.0.1:8000/v1`.
 
 **Step 4 – Ask about code (optional).** Open a code file in that window, select some lines,
@@ -89,34 +92,37 @@ question, the code and the answer appear in the chat panel.
 ```
  Extension Development Host window                      Model server (python)
 ┌──────────────────────────────────────────┐          ┌───────────────────────────┐
-│ Chat panel (web page)                    │          │ src/inference_server.py   │
+│ Chat panel or tab (web page)             │          │ src/inference_server.py   │
 │   you type ─▶ postMessage ─┐             │          │                           │
 │                            ▼             │  HTTP    │ fit prompt to 2,048 tokens│
 │ extension.js: build request ─────────────┼─────────▶│ TinyLlama generates on CPU│
 │              read stream ◀───────────────┼──────────│ streams "data:" events    │
-│   panel shows text ◀─ postMessage ◀─┘    │          │ models/TinyLlama/         │
+│   chat shows text ◀─ postMessage ◀─┘     │          │ models/TinyLlama/         │
 └──────────────────────────────────────────┘          └───────────────────────────┘
 ```
 
 **1. VS Code loads the plugin.** It reads `package.json`, which lists the commands. VS Code only
 runs `extension.js` the first time one of them is used. At that point `activate()`
-([extension.js:25](src/vscode-extension/extension.js#L25)) registers what each command does.
+([extension.js:30](src/vscode-extension/extension.js#L30)) registers what each command does.
 
-**2. The chat panel opens.** `showPanel()` ([line 77](src/vscode-extension/extension.js#L77))
-creates a **webview**: a small web page inside a VS Code tab. Its HTML, CSS and script come from
-`getHtml()` ([line 304](src/vscode-extension/extension.js#L304)) and use your VS Code theme's
+**2. The chat opens.** `showPanel()` ([line 99](src/vscode-extension/extension.js#L99)) creates the
+panel, and `setUpChat()` ([line 112](src/vscode-extension/extension.js#L112)) loads a **webview**, a
+small web page, into it. The TinyLlama tab gets the same page: `package.json` adds the tab under
+`viewsContainers` → `secondarySidebar`, the same way the Claude Code and Codex extensions add
+theirs. Both share one conversation. Its HTML, CSS and script come from
+`getHtml()` ([line 336](src/vscode-extension/extension.js#L336)) and use your VS Code theme's
 colors. `retainContextWhenHidden` keeps the conversation when you switch tabs.
 
 **3. You ask a question.** The web page can't reach the network or VS Code directly. It sends the
 text to `extension.js` with `postMessage`, and `extension.js` receives it in
-`onDidReceiveMessage` ([line 90](src/vscode-extension/extension.js#L90)). For
-**Ask About Selection** ([line 48](src/vscode-extension/extension.js#L48)), `extension.js` reads
+`onDidReceiveMessage` ([line 116](src/vscode-extension/extension.js#L116)). For
+**Ask About Selection** ([line 70](src/vscode-extension/extension.js#L70)), `extension.js` reads
 the selected code from the editor, and puts it in a Markdown code block under your question.
 
-**4. The request is built.** `send()` ([line 126](src/vscode-extension/extension.js#L126)) builds
+**4. The request is built.** `send()` ([line 151](src/vscode-extension/extension.js#L151)) builds
 the messages: a short **system prompt** of instructions, the conversation so far, and your new
-message ([line 139](src/vscode-extension/extension.js#L139)). `streamChat()`
-([line 161](src/vscode-extension/extension.js#L161)) sends them with `fetch` to
+message ([line 164](src/vscode-extension/extension.js#L164)). `streamChat()`
+([line 190](src/vscode-extension/extension.js#L190)) sends them with `fetch` to
 `http://127.0.0.1:8000/v1/chat/completions`, with `stream: true` so the reply comes back piece by
 piece.
 
@@ -133,11 +139,11 @@ your CPU, one token at a time, in a background thread. Each new piece of text is
 back as a server-sent event: a line like `data: {"choices":[{"delta":{"content":"A stack"}}]}`.
 The server terminal logs the prompt size and reply length.
 
-**7. The reply streams into the panel.** `streamChat()` reads the events as they arrive
-([line 181](src/vscode-extension/extension.js#L181)), pulls out each piece of text
-([line 193](src/vscode-extension/extension.js#L193)), and `send()` passes it to the panel
-([line 142](src/vscode-extension/extension.js#L142)). The panel's script
-([line 388](src/vscode-extension/extension.js#L388)) appends it to the reply, so the answer
+**7. The reply streams into the chat.** `streamChat()` reads the events as they arrive
+([line 213](src/vscode-extension/extension.js#L213)), pulls out each piece of text
+([line 225](src/vscode-extension/extension.js#L225)), and `send()` passes it to the chat
+([line 167](src/vscode-extension/extension.js#L167)). The chat's script
+([line 417](src/vscode-extension/extension.js#L417)) appends it to the reply, so the answer
 appears word by word.
 
 **8. Stopping.** **Stop** aborts the `fetch`. The server notices that the connection closed and
@@ -153,12 +159,12 @@ See section 4 of [04_readme-harness.md](04_readme-harness.md).
 - **Side by side:** put the server terminal next to the chat panel. Each question appears in the
   terminal as a `Request:` line, with the prompt size and any dropped messages, while the answer
   streams into VS Code.
-- **Stop the server** (`Ctrl+C`) and ask again. The panel shows *"Couldn't reach the TinyLlama
+- **Stop the server** (`Ctrl+C`) and ask again. The chat shows *"Couldn't reach the TinyLlama
   server…"*. Start the server again and it works.
 - **Resource Monitor:** the server prints its Process ID. Follow section 4 of
   [02_readme-rag-user-guide.md](02_readme-rag-user-guide.md) with that PID. All its connections are
   loopback (`127.0.0.1`), and the CPU spikes while it answers.
-- **No Copilot involved:** you can sign out of GitHub entirely, or disable Copilot, and the panel
+- **No Copilot involved:** you can sign out of GitHub entirely, or disable Copilot, and the chat
   still works.
 
 ---
@@ -248,7 +254,7 @@ plugin. Each user still runs TinyLlama on their own computer.
 | Topic | Link |
 |---|---|
 | `package.json` fields (`contributes`, `commands`, `menus`, `configuration`) | [Extension Manifest](https://code.visualstudio.com/api/references/extension-manifest) |
-| The chat panel (a webview) | [Webview API](https://code.visualstudio.com/api/extension-guides/webview) |
+| The chat panel and tab (webviews) | [Webview API](https://code.visualstudio.com/api/extension-guides/webview), [Views](https://code.visualstudio.com/api/ux-guidelines/views) |
 | Packaging and publishing (section 7) | [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) |
 | The full API that `require("vscode")` provides | [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api) |
 | The Extension Development Host | See [04_readme-harness.md](04_readme-harness.md) |
@@ -259,7 +265,7 @@ plugin. Each user still runs TinyLlama on their own computer.
 
 | Problem | Fix |
 |---|---|
-| The panel says "Couldn't reach the TinyLlama server…" | The server isn't running, or is still loading. Check its terminal (step 1). |
+| The chat says "Couldn't reach the TinyLlama server…" | The server isn't running, or is still loading. Check its terminal (step 1). |
 | **TinyLlama:** commands don't appear in `Ctrl+Shift+P` | You're in the main window, or the host window was reloaded with extensions enabled. Close it and run the task again (step 2). |
 | The Extension Development Host closes immediately | See the troubleshooting table in [04_readme-harness.md](04_readme-harness.md). |
 | Changes to `extension.js` don't show up | Run **Developer: Reload Window** (`Ctrl+R`) in the Extension Development Host. |

@@ -2,10 +2,15 @@
 //
 // A plain chat client (no tools, no agent loop): it builds the prompt (system prompt + chat
 // history + your question, and optionally the code you selected), sends it to the local
-// inference server (src/inference_server.py), and streams the reply into a chat panel.
+// inference server (src/inference_server.py), and streams the reply into the chat.
+//
+// The chat appears in two places, showing the same conversation:
+//   - a "TinyLlama" tab in the secondary side bar, next to Chat, Claude Code and Codex. Those
+//     tabs work the same way: a view container in package.json holding a webview.
+//   - a "TinyLlama Chat" panel that opens beside the editor, on the right.
 //
 // Commands (Ctrl+Shift+P):
-//   TinyLlama: Open Chat            - opens the chat panel
+//   TinyLlama: Open Chat            - opens the chat panel on the right
 //   TinyLlama: Ask About Selection  - asks a question about the code selected in the editor
 //                                     (also on the editor's right-click menu)
 // Chat participant:
@@ -16,16 +21,33 @@ const vscode = require("vscode");
 // Instructions sent at the start of every conversation
 const SYSTEM_PROMPT = "You are a helpful coding assistant running locally. Answer briefly and clearly.";
 
-let panel;              // the chat panel, if open
-let panelReady = false; // true once the panel's script has loaded and can receive messages
-let pending;            // a question waiting for the panel to finish loading
+let panel;              // the chat panel on the right, if open
+const chats = new Set(); // the webviews showing the chat (the tab and the panel) that are ready
+let pending;            // a question waiting for a chat to finish loading
 let history = [];       // the conversation so far: [{ role, content }, ...]
 let controller;         // lets the Stop button cancel the request in progress
 
 function activate(context) {
   context.subscriptions.push(
+    // The TinyLlama tab. VS Code calls resolveWebviewView the first time the tab is shown.
+    vscode.window.registerWebviewViewProvider("tinyllama.chatView", {
+      resolveWebviewView: (view) => setUpChat(view.webview, view.onDidDispose),
+    }, {
+      webviewOptions: { retainContextWhenHidden: true }, // keep the conversation when the tab is hidden
+    }),
     vscode.commands.registerCommand("tinyllama.openChat", () => showPanel()),
-    vscode.commands.registerCommand("tinyllama.askAboutSelection", askAboutSelection)
+    vscode.commands.registerCommand("tinyllama.askAboutSelection", askAboutSelection),
+    // Changing a tinyllama.* setting starts a new conversation, so the header shows the new model
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("tinyllama")) {
+        if (controller) controller.abort();
+        history = [];
+        for (const webview of [...chats]) {
+          chats.delete(webview);
+          webview.html = getHtml(serverUrl(), vscode.workspace.getConfiguration("tinyllama").get("model"));
+        }
+      }
+    })
   );
 
   // @tinyllama in VS Code's Chat view. Only available when the Chat view exists (it comes
@@ -63,7 +85,7 @@ async function askAboutSelection() {
   const message = `${question}\n\n\`\`\`${language}\n${code}\n\`\`\``;
 
   showPanel();
-  if (panelReady) {
+  if (chats.has(panel.webview)) {
     send(message);
   } else {
     pending = message; // sent as soon as the panel says it's ready
@@ -71,7 +93,7 @@ async function askAboutSelection() {
 }
 
 // ------------------------------------------------------------------------------------------
-// The chat panel
+// The chat (the TinyLlama tab and the panel on the right)
 // ------------------------------------------------------------------------------------------
 
 function showPanel() {
@@ -80,16 +102,22 @@ function showPanel() {
     return;
   }
   panel = vscode.window.createWebviewPanel("tinyllamaChat", "TinyLlama Chat", vscode.ViewColumn.Beside, {
-    enableScripts: true,
     retainContextWhenHidden: true, // keep the conversation when the tab is hidden
   });
-  panelReady = false;
-  panel.webview.html = getHtml(serverUrl(), vscode.workspace.getConfiguration("tinyllama").get("model"));
+  setUpChat(panel.webview, panel.onDidDispose);
+  panel.onDidDispose(() => (panel = undefined));
+}
 
-  // Messages from the panel's buttons
-  panel.webview.onDidReceiveMessage((message) => {
+// Loads the chat page into a webview (the tab's or the panel's) and handles its buttons
+function setUpChat(webview, onDidDispose) {
+  webview.options = { enableScripts: true };
+  webview.html = getHtml(serverUrl(), vscode.workspace.getConfiguration("tinyllama").get("model"));
+
+  webview.onDidReceiveMessage((message) => {
     if (message.type === "ready") {
-      panelReady = true;
+      // Show the conversation so far, so the tab and the panel match
+      for (const turn of history) webview.postMessage({ type: turn.role, text: turn.content });
+      chats.add(webview);
       if (pending) {
         send(pending);
         pending = undefined;
@@ -100,19 +128,16 @@ function showPanel() {
       if (controller) controller.abort();
     } else if (message.type === "clear") {
       history = [];
+      post({ type: "clear" });
     }
   });
 
-  panel.onDidDispose(() => {
-    if (controller) controller.abort();
-    panel = undefined;
-    panelReady = false;
-    history = [];
-  });
+  onDidDispose(() => chats.delete(webview));
 }
 
+// Sends a message to every open chat
 function post(message) {
-  if (panel) panel.webview.postMessage(message);
+  for (const webview of chats) webview.postMessage(message);
 }
 
 // ------------------------------------------------------------------------------------------
@@ -142,6 +167,10 @@ async function send(text) {
       post({ type: "delta", text: delta });
     });
     history.push({ role: "assistant", content: reply });
+    if (!reply) {
+      post({ type: "info", text: "The model sent no answer text. A model that thinks first, such as Qwen, " +
+        "may have used all of tinyllama.maxTokens on thinking: turn tinyllama.thinking off, or try a larger value." });
+    }
   } catch (err) {
     if (err.name === "AbortError") {
       history.push({ role: "assistant", content: reply });
@@ -157,7 +186,7 @@ async function send(text) {
 }
 
 // Sends messages to the local server and calls onText with each piece of the reply as it
-// arrives. Used by both the chat panel and the @tinyllama chat participant.
+// arrives. Used by both the chat view and the @tinyllama chat participant.
 async function streamChat(messages, signal, onText) {
   const maxTokens = vscode.workspace.getConfiguration("tinyllama").get("maxTokens");
 
@@ -171,6 +200,9 @@ async function streamChat(messages, signal, onText) {
       messages,
       max_tokens: maxTokens,
       stream: true,
+      // Asks models like Qwen to answer straight away. Their thinking counts toward max_tokens,
+      // and can use it all up before any answer. Servers that don't know this field ignore it.
+      ...(vscode.workspace.getConfiguration("tinyllama").get("thinking") ? {} : { reasoning_effort: "none" }),
     }),
     signal,
   });
@@ -298,7 +330,7 @@ async function readAttachments(references) {
 }
 
 // ------------------------------------------------------------------------------------------
-// The panel's HTML, CSS and script
+// The view's HTML, CSS and script
 // ------------------------------------------------------------------------------------------
 
 function getHtml(url, model) {
@@ -313,7 +345,7 @@ function getHtml(url, model) {
 <style>
   body { display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 0 12px;
          font-family: var(--vscode-font-family); color: var(--vscode-foreground);
-         background: var(--vscode-editor-background); box-sizing: border-box; }
+         background: var(--vscode-sideBar-background); box-sizing: border-box; }
   header { padding: 10px 0; border-bottom: 1px solid var(--vscode-panel-border);
            color: var(--vscode-descriptionForeground); font-size: 12px; }
   #log { flex: 1; overflow-y: auto; padding: 8px 0; }
@@ -379,15 +411,14 @@ function getHtml(url, model) {
     }
   });
   stopButton.addEventListener("click", () => vscode.postMessage({ type: "stop" }));
-  document.getElementById("clear").addEventListener("click", () => {
-    log.innerHTML = "";
-    vscode.postMessage({ type: "clear" });
-  });
+  document.getElementById("clear").addEventListener("click", () => vscode.postMessage({ type: "clear" }));
 
   // Messages from the extension
   window.addEventListener("message", (event) => {
     const message = event.data;
     if (message.type === "user") add("user", message.text);
+    else if (message.type === "assistant") add("assistant", message.text);
+    else if (message.type === "clear") log.innerHTML = "";
     else if (message.type === "start") { current = add("assistant pending", ""); setBusy(true); }
     else if (message.type === "delta" && current) { current.textContent += message.text; log.scrollTop = log.scrollHeight; }
     else if (message.type === "error") add("error", message.text);

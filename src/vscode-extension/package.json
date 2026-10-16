@@ -10,6 +10,24 @@
   },
   "main": "./extension.js",
   "contributes": {
+    "viewsContainers": {
+      "secondarySidebar": [
+        {
+          "id": "tinyllama",
+          "title": "TinyLlama",
+          "icon": "$(hubot)"
+        }
+      ]
+    },
+    "views": {
+      "tinyllama": [
+        {
+          "type": "webview",
+          "id": "tinyllama.chatView",
+          "name": "TinyLlama"
+        }
+      ]
+    },
     "chatParticipants": [
       {
         "id": "tinyllama.chat",
@@ -52,6 +70,11 @@
           "type": "number",
           "default": 256,
           "description": "Maximum length of each reply, in tokens."
+        },
+        "tinyllama.thinking": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let models that think before answering, such as Qwen, do so. Thinking counts toward tinyllama.maxTokens, and can use it all up before any answer. When off, the request includes \"reasoning_effort\": \"none\". TinyLlama ignores this setting."
         },
         "tinyllama.model": {
           "type": "string",

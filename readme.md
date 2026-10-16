@@ -8,7 +8,7 @@ visible and explainable.
 It shows, step by step:
 - **RAG:** a chatbot that answers questions from your own documents.
 - **A local model served over an API:** TinyLlama and Qwen running on your own CPU or GPU.
-- **A VS Code plugin:** a chat panel and an `@tinyllama` chat participant that talk to the local
+- **A VS Code plugin:** a chat panel and tab, and an `@tinyllama` chat participant that talk to the local
   model.
 - **Copilot Chat with a local model:** Qwen in Ollama, selected in Copilot's model picker.
 - **Skills, MCP tools and custom agents:** the building blocks of Copilot's agent harness,
@@ -72,10 +72,11 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | [00_readme-learning-objectives.md](00_readme-learning-objectives.md) | The presentation plan: learning objectives and an 8–10 minute demonstration for each step 01–06, plus the safety thread (tools off by default, care with public `.md` files). Diagram: [docs/learning-steps.drawio](docs/learning-steps.drawio) |
 | [01_readme-setup.md](01_readme-setup.md) | Installing everything and downloading the models (Windows), plus the project's history and what changed from the NVIDIA original |
 | [02_readme-rag-user-guide.md](02_readme-rag-user-guide.md) | The Envie RAG app: how RAG works step by step, demos and troubleshooting |
-| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's chat panel, and how the plugin works |
+| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's chat panel and tab, and how the plugin works |
 | [04_readme-harness.md](04_readme-harness.md) | The Extension Development Host, `@tinyllama` in Copilot's Chat view, and skills |
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen (Ollama, Foundry Local or this project's server), using the GPU, and Qwen in Copilot Chat |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP tools (Fetch), custom agents (Idea Generator), and turning tools off by default |
+| [readme-sessions.md](readme-sessions.md) | Who remembers a conversation: the plugin's chat panel vs. `@tinyllama` sessions in the Chat view, side by side; where each state is kept and how to see it. |
 | [readme-safety.md](readme-safety.md) | All safety and security points in one place: the two rules, local servers on the network, pickle files, supply chain, pinning, privacy, logs, credentials, and why the examples aren't products. |
 | [readme-more-info.md](readme-more-info.md) | Inspecting the hidden context VS Code sends, where `/` commands come from, and the Copilot Harness Builder |
 | [readme-model-training.md](readme-model-training.md) | Fine-tuning your own model and publishing it on Hugging Face |
