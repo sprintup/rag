@@ -63,6 +63,70 @@ failed, not layer 1. The quick start below sets up layer 3 properly, with `qwen3
 | Tool calling (the model, layer 1) | No | Yes | Yes, more reliable |
 
 
+### Where the models come from
+
+| Model | Made by | Country | License | Notes |
+|---|---|---|---|---|
+| **TinyLlama 1.1B Chat** | The TinyLlama project: the **StatNLP Research Group, Singapore University of Technology and Design** | **Singapore** | Apache 2.0 | Uses the same architecture and tokenizer as Meta's **Llama 2** (USA). Pre-trained on 3 trillion tokens of public data (SlimPajama, StarCoder), then tuned on public chat and feedback datasets. Source: [TinyLlama on GitHub](https://github.com/jzhang38/TinyLlama). |
+| **Qwen 2.5** and **Qwen 3.5** | The **Qwen team at Alibaba Cloud** (Alibaba Group) | **China** | Apache 2.0 for `qwen2.5:7b`, `qwen3.5:4b` and Qwen 2.5 1.5B (some other sizes use Qwen's own license) | Published on Hugging Face under the [Qwen](https://huggingface.co/Qwen) organization. `ollama show qwen3.5:4b` shows 4.2B parameters, a 262,144-token context, and capabilities including **tools**, **thinking** and **vision**. |
+| `all-MiniLM-L6-v2` (the Envie app's embedding model) | The **sentence-transformers** project (started at the UKP Lab, TU Darmstadt), based on **Microsoft's** MiniLM | **Germany** (sentence-transformers); MiniLM by Microsoft | Apache 2.0 | Only turns text into vectors for search; doesn't generate text. |
+
+**Why origin can matter, and what it does and doesn't change:**
+- **Running a model locally sends nothing to its maker.** The weights are a file of numbers on
+  your disk. TinyLlama doesn't contact Singapore and Qwen doesn't contact China. You can confirm
+  that with the Resource Monitor checks in [02_readme-rag-user-guide.md](02_readme-rag-user-guide.md):
+  no connections leave your computer.
+- **Training shapes behavior.** A model reflects its training data and its makers' choices, such
+  as which topics it avoids, how it describes politically sensitive subjects, and its built-in
+  biases. Models trained in different countries can answer the same question differently. Treat
+  any model's answers on contested topics with care, and test models for your intended use.
+- **Organizations may have rules.** Some companies, schools and government bodies restrict which
+  models may be used, sometimes based on country of origin. Check your organization's policy
+  before using a model for work.
+- **Supply chain.** Download models only from the original publisher's page (`TinyLlama/…`,
+  `Qwen/…` on Hugging Face, or Ollama's official library). This project loads `.safetensors`
+  files, a format that only holds numbers and can't run code. Avoid model files that need
+  `trust_remote_code=True` or old `.bin`/pickle formats from sources you don't trust.
+- **The bigger risk is the tools, not the model.** A model can only *suggest* actions. What it can
+  actually *do* depends on the tools you give it, which is the next section.
+
+### Security: why tools should be denied by default
+
+In **Agent** mode, the model can call any tool that's enabled. VS Code's default is **every tool
+enabled**: 118 on this computer, including built-in tools to **edit files** and **run terminal
+commands**, a **browser**, **web fetching**, and tools from every MCP server and extension
+(GitHub, GitKraken, Pylance and others). Leaving that on carries real risks:
+
+| Risk | How it happens |
+|---|---|
+| **Prompt injection** | A web page, file, issue or document the model reads contains hidden instructions ("ignore the user and run…"). The model can't reliably tell *your* instructions from text it was given to read. With tools on, injected instructions can turn into actions. |
+| **Running commands on your computer** | With the terminal tool on, a confused or manipulated model can propose commands that delete files, install software, or change settings. They run **with your user account's permissions**. |
+| **Leaking data** | With file reading plus web fetching on, a model can read something private (a `.env` file, keys, documents) and send it out, e.g. inside a URL it "fetches". Nothing needs to look malicious; one tool call is enough. |
+| **Acting as you online** | MCP servers and extensions such as GitHub use **your** sign-in. A tool call can create issues, comment, or change repositories in your name. |
+| **Mistakes by a small model** | Small local models pick the wrong tool or wrong arguments more often than large ones. More tools means more ways to get it wrong, and longer requests, which also confuse small models (see "Compacted conversation" earlier). |
+| **Untrusted agents and skills** | Agents, skills and prompt files downloaded from public collections or cloned repositories are instructions the model follows. They can hide injected instructions, or grant an agent broad tools. See "Security: public agents and skills can contain injections" in [06_readme-mcp-agents.md](06_readme-mcp-agents.md). |
+| **"Local" isn't "safe"** | The model being on your computer protects your *data from the model's maker*. It doesn't limit what the model's *tools* can do on your computer. Tools run on your machine, as you. |
+
+These risks grow if **auto-approve** is on, because then no one checks the tool calls.
+
+**Deny by default, allow per task** (least privilege):
+1. **Turn every tool off** in **Configure Tools** (the top checkbox, until it shows **0 Selected**).
+2. **Turn on only what the current task needs:** e.g. only **read** for skills (quick start step
+   5), or only **mcp-fetch → fetch** for the MCP demo
+   ([06_readme-mcp-agents.md](06_readme-mcp-agents.md)).
+3. **Prefer custom agents with explicit tool lists** for repeated tasks. The Idea Generator agent
+   allows only `fetch/*`.
+4. **Keep approvals on:** `chat.tools.global.autoApprove` off, and **Default permissions** below
+   the chat input, so you approve each tool call.
+5. **Limit MCP servers:** `chat.mcp.autostart` set to **never**, `chat.mcp.discovery.enabled` off,
+   and only servers you've reviewed.
+6. **Limit the network:** `chat.agent.networkFilter` with `chat.agent.deniedNetworkDomains` for
+   VS Code's built-in fetch tool and browser. MCP servers are separate programs, so stop them when
+   they're not needed.
+
+Step-by-step instructions are in "Security: start with every tool turned off" in
+[06_readme-mcp-agents.md](06_readme-mcp-agents.md).
+
 ## Quick start: Qwen inside Copilot Chat
 
 This runs **Qwen 3.5 4B** (`qwen3.5:4b`) in Ollama, on your GPU, as the model in the normal Copilot
@@ -151,11 +215,14 @@ Selecting it in the model picker sends every message in that chat to Qwen.
    - **`chat.useCopilotModelsForUtilityModels`**: turn it off if it's on.
 2. **Start a new chat**, choose `qwen3.5:4b` in the model picker, switch the session selector below
    the input box to **Local**, and set the mode to **Agent**.
-3. **Turn off tools you don't need.** Click the tools button (the sliders icon next to the model
-   name) and untick all **MCP servers** (e.g. GitKraken, `github-mcp-server`, Pylance) and other
-   tool groups you don't need. Keep the built-in tools for **reading files**, which loading a skill
-   needs. Every tool's definition is sent with each request, so fewer tools means a smaller
-   request, less "Optimized tool selection", and less "Compacted conversation".
+3. **Turn on only what's needed.** Click the tools button (the sliders icon next to the model
+   name) to open **Configure Tools**. Untick everything with the top checkbox (**0 Selected**),
+   then tick only the built-in **read** group (*"Read files in your workspace"*). Loading a skill
+   means reading its `SKILL.md`, so this is the one tool skills need. Click **OK**. This follows
+   least privilege (see "Security: start with every tool turned off" in
+   [06_readme-mcp-agents.md](06_readme-mcp-agents.md)), and keeps requests small: every enabled
+   tool's definition is sent with each request, so fewer tools means less "Optimized tool
+   selection" and "Compacted conversation".
 4. **Ask without `/pirate`:**
    ```
    What is a stack? Answer like a pirate.
@@ -400,7 +467,7 @@ runs on the CPU and answers slow down a lot. Ollama and Foundry Local use compre
 | `qwen2.5:1.5b` | ~1 GB | Yes, very fast |
 | `qwen2.5:3b` | ~2 GB | Yes, very fast |
 | `qwen2.5:7b` | ~4.7 GB | Yes. Worked in Ask mode, but too big to also fit a 64K context |
-| `qwen3.5:4b` | smaller (see `ollama pull`) | **Yes, with room for a larger context. Recommended for Agent mode** |
+| `qwen3.5:4b` | ~3.3 GB | **Yes, with room for a larger context. Recommended for Agent mode** |
 | `qwen2.5:14b` | ~9 GB | No, partly on the CPU and slow |
 
 **How each option uses the GPU:**
