@@ -2,7 +2,7 @@
 
 This is the plan for presenting the project in six steps, **01 to 06**, matching the numbered
 guides. Each step has **at most three learning objectives** and **a demonstration of about 8 to
-10 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
+12 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
 for a little over an hour. Each objective completes the sentence
 **"After this step, participants will be able to …"**.
 
@@ -42,6 +42,8 @@ git switch --detach 378b56c
 - [ ] Start the server: `python src/inference_server.py` (in its own terminal, so you can show its log).
 - [ ] **Terminal → Run Task… → Run TinyLlama Plugin**, to open the Extension Development Host.
 - [ ] In that window: a **new chat**, session **Local**, mode **Ask**.
+- [ ] In your **main** VS Code window (not the test window, which has extensions turned off): the
+      **Claude Code** and **Codex** extensions installed and signed in, so their tabs work in step 04.
 
 After step 04, go back to the latest version **before** step 05:
 ```powershell
@@ -217,30 +219,39 @@ server once (model loading takes 10–30 seconds).
 
 ---
 
-## Step 04 – The harness: Copilot Chat, `@tinyllama`, skills and their limits (10 minutes)
+## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (12 minutes)
 
-Guide: [04_readme-harness.md](04_readme-harness.md)
+Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8) and
+[readme-sessions.md](readme-sessions.md)
 
 **Learning objectives:**
-1. **Distinguish** what a harness adds around a model: a **chat participant** (`@tinyllama`: *who*
-   answers), **skills** (`/pirate`: *what to do*, packaged in a `SKILL.md` file) and **context**
-   (files you attach).
-2. **Explain** how a model's **context window** limits what it can read. TinyLlama reads only about
-   2,048 tokens, so attachments get cut and older messages get dropped.
-3. **Explain** why a small model like TinyLlama can't work in **Agent mode**: it can't call tools,
-   so it can't read files or load skills by itself.
+1. **Distinguish** what the `@`, `/` and `#` operators do, and **recognize** that each **harness**
+   defines them. In Copilot's Chat tab, `@` picks *who* answers (a chat participant, `@tinyllama`),
+   `/` picks *what to do* (a skill or prompt file, `/pirate`) and `#` adds context or a tool. In
+   Claude Code and Codex, `@` attaches a file, `#` means nothing, and Codex uses `$` for skills.
+   Copilot, Claude Code and Codex are three separate harnesses from three companies, each reading
+   its own folders.
+2. **Compare** how harnesses handle context: who keeps the history (sessions, and where they're
+   saved), what happens when the context window fills up, which **utility models** see the
+   conversation, which tools are offered, and ⚠ each harness's own permission settings.
+3. **Explain** which harnesses can run on a **local model**, and what **hidden context** each one
+   sends with every message (system prompt, tools, instruction files, skills list, environment),
+   ⚠ which goes wherever the model runs, local or cloud.
 
 **Demonstration:**
 | Time | What you do | What to point out |
 |---|---|---|
-| 2 min | In the Extension Development Host: Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` | The same local model, now inside a harness. The **Chat \| Claude Code \| Codex** tabs come with VS Code itself; our plugin adds `@tinyllama` inside the Chat tab. |
-| 3 min | **Add Context…** → attach `readme.md`, and ask `@tinyllama summarize this`. Show the server terminal. | The reply starts with *"Only the first 3,000 of … characters were sent"*, and the server log shows the prompt size. A bigger model reads more; every model has a limit. |
-| 3 min | Switch the mode from **Ask** to **Agent** and ask `@tinyllama` again. Then, in a terminal, run `ollama show qwen3.5:4b` and point at its **Capabilities**. | TinyLlama has no tool calling: our server never receives tools, and Agent mode needs a model that can call them. Qwen 3.5 lists `tools` (step 05). |
-| 2 min | ⚠ Open `.github/skills/pirate/SKILL.md` in the editor (raw, not the preview). | A skill is just Markdown the model obeys. Anyone could write one, so read before you install. |
+| 2 min | In the Extension Development Host (commit `378b56c`): Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` | `@` = who answers, `/` = what to do: our plugin adds `@tinyllama`, VS Code's harness finds `/pirate` in `.github/skills/`. |
+| 2 min | In your **main** VS Code window, type `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs. Show the operators table (04, section 7). | The same keys mean different things in each tab: `@` is a participant in one and a file in the others. `/pirate` only appears in the Chat tab, because only Copilot reads `.github/skills/`. Three harnesses, three sets of folders. |
+| 3 min | Side by side: `@tinyllama` in the Chat view (left) and **TinyLlama: Open Chat** (right). Ask both *"What was my first message?"*, then **New Session** / **Clear** and ask again. Show the **Sessions** list. | The model remembers nothing: each program keeps the history and resends it. VS Code saves sessions to disk; our panel only in memory. The session title came from a **utility model**. Show the context table (readme-sessions, section 2). |
+| 3 min | Attach `readme.md` and ask `@tinyllama summarize this`; point at the server log's prompt size. Then show the hidden-context table (04, section 8). | Our plugin sends a few hundred tokens; Copilot's Agent mode about 9,000 for "Hello?", most of it hidden. ⚠ With a cloud model, all of it (instructions, skills list, attached files) leaves your computer. All three harnesses can use a local model through Ollama (`ollama launch claude`, `codex --oss`). |
+| 2 min | ⚠ Open `.github/skills/pirate/SKILL.md` raw, and name each harness's permission setting: **Configure Tools**, Claude Code's permission modes, Codex's `sandbox_mode`. | A skill is Markdown the model obeys, and it's sent with every request. Each harness has its own lock: turning tools off in one doesn't restrict the others. |
 
-**Prepare beforehand:** on commit `378b56c` (see the pre-flight checklist); the inference server
-running; the test window open with a new **Local**, **Ask** chat. Rehearse the Agent-mode moment, and
-note what VS Code shows on your setup when `@tinyllama` is used in Agent mode.
+**Prepare beforehand:** the Extension Development Host on commit `378b56c` with the inference
+server running (see the pre-flight checklist); your **main** VS Code window with the Claude Code
+and Codex extensions installed and signed in; [readme-sessions.md](readme-sessions.md) and section 8
+of [04_readme-harness.md](04_readme-harness.md) open for the tables. Why small models can't use
+Agent mode is covered in step 05.
 
 **Afterwards:** `git switch main`, and close the Extension Development Host, before step 05.
 
@@ -308,10 +319,10 @@ changes daily.
 | 01 Setup | 10 | Describe training vs. inference · Explain what Ollama abstracts away · ⚠ Explain a model's supply chain and bias |
 | 02 RAG | 10 | Describe the RAG steps · Explain sources · Demonstrate local inference |
 | 03 Serving inference | 8 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
-| 04 The harness | 10 | Distinguish @, / and context · Explain context limits · Explain no Agent mode for small models |
+| 04 Harnesses | 12 | Distinguish @, / and # per harness · ⚠ Compare how harnesses handle context · ⚠ Explain local models and hidden context |
 | 05 Models | 10 | Compare models by version, size and origin · Explain tool conditions · ⚠ Explain tools off by default |
 | 06 MCP and agents | 10 | Describe MCP · Distinguish instruction files · ⚠ Describe injections in public `.md` files |
-| **Total** | **58** | 18 objectives |
+| **Total** | **60** | 18 objectives |
 
 **For a quick check of learning,** ask participants at the end of each step to explain one objective
 to the person next to them in one minute. End with the two safety rules: they should be able to

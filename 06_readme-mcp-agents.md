@@ -223,8 +223,8 @@ but don't try to get around a site's bot protection.
   content back to Qwen.
 - **Developer: Show Chat Debug View** shows both requests, including the `fetch` tool's definition
   that VS Code sent to the model, and the tool result
-  ([readme-more-info.md](readme-more-info.md)).
-- **The Copilot Harness Builder** (section 8 of [readme-more-info.md](readme-more-info.md)) explains
+  ([readme-context.md](readme-context.md)).
+- **The Copilot Harness Builder** (section 8 of [readme-context.md](readme-context.md)) explains
   MCP servers under its **Tools** and **Policy & state** sections.
 
 ---
@@ -334,7 +334,7 @@ trusting a repository:
    - `description:` — is it specific (*"when the user asks for an answer like a pirate"*), not
      *"always"*?
    - For skills you only want to run yourself, add **`disable-model-invocation: true`**
-     ([readme-more-info.md](readme-more-info.md), section 7).
+     ([readme-context.md](readme-context.md), section 7).
 3. **Search for warning signs.** From the project folder in PowerShell:
    ```powershell
    Get-ChildItem .github -Recurse -Include *.md | Select-String -Pattern 'http', 'curl', 'wget', 'fetch', '\.env', 'token', 'password', 'secret', 'autoApprove', 'settings\.json', 'ignore (all|previous|the user)', 'do not (tell|mention)', '<!--'
@@ -592,7 +592,7 @@ As with skills, a cute answer doesn't prove the file was used. To check:
   instructions file should be listed.
 - **In the request:** **Developer: Show Chat Debug View** → open the request → **Show Raw Request
   Body**, and search for `Roar like a brave lion`, a phrase that's only in the instructions file
-  ([readme-more-info.md](readme-more-info.md)).
+  ([readme-context.md](readme-context.md)).
 - **A side-by-side test:** ask the same question, e.g. *"What does brave mean?"*, in two new chats:
   one plain, one with the instructions attached (way 2). Compare sentence length and the "Roar!".
 

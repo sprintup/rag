@@ -136,26 +136,32 @@
         <mxCell id="03_bind" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;No password on local APIs&lt;/b&gt;&lt;br&gt;&lt;i&gt;keep servers on 127.0.0.1 (HOST, OLLAMA_HOST)&lt;/i&gt;" vertex="1">
           <mxGeometry height="55" width="380" x="20" y="280" as="geometry" />
         </mxCell>
-        <mxCell id="step04" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffe6cc;collapsible=0;" value="&lt;b&gt;04&lt;/b&gt;&amp;nbsp; The harness: Copilot Chat, @ and /" vertex="1">
+        <mxCell id="step04" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffe6cc;collapsible=0;" value="&lt;b&gt;04&lt;/b&gt;&amp;nbsp; Harnesses: Copilot, Claude Code, Codex" vertex="1">
           <mxGeometry height="350" width="420" x="40" y="480" as="geometry" />
         </mxCell>
-        <mxCell id="04_obj" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#d79b00;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Distinguish @participant, /skill and attached context&lt;br&gt;2. Explain how the context window limits what a model reads&lt;br&gt;3. Explain why small models can&#39;t use Agent mode" vertex="1">
+        <mxCell id="04_obj" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;fillColor=#ffffff;strokeColor=#d79b00;dashed=1;" value="&lt;b&gt;Learning objectives&lt;/b&gt;&lt;br&gt;1. Distinguish @, / and # (each harness defines them)&lt;br&gt;2. ⚠ Compare how harnesses handle context&lt;br&gt;3. ⚠ Explain local models and the hidden context sent" vertex="1">
           <mxGeometry height="85" width="380" x="20" y="40" as="geometry" />
         </mxCell>
-        <mxCell id="04_chatview" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Copilot Chat view&lt;br&gt;&lt;i&gt;new chat · Local · Ask&lt;/i&gt;" vertex="1">
+        <mxCell id="04_chatview" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="3 tabs = 3 harnesses&lt;br&gt;&lt;i&gt;Copilot · Claude Code · Codex&lt;/i&gt;" vertex="1">
           <mxGeometry height="50" width="180" x="20" y="140" as="geometry" />
         </mxCell>
-        <mxCell id="04_at" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;@tinyllama&lt;/b&gt;&lt;br&gt;&lt;i&gt;who answers&lt;/i&gt;" vertex="1">
+        <mxCell id="04_at" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;@ / #&lt;/b&gt;&lt;br&gt;&lt;i&gt;set per harness&lt;/i&gt;" vertex="1">
           <mxGeometry height="50" width="85" x="220" y="140" as="geometry" />
         </mxCell>
-        <mxCell id="04_slash" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;/pirate&lt;/b&gt;&lt;br&gt;&lt;i&gt;what to do&lt;/i&gt;" vertex="1">
+        <mxCell id="04_slash" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="&lt;b&gt;/pirate&lt;/b&gt;&lt;br&gt;&lt;i&gt;Copilot only&lt;/i&gt;" vertex="1">
           <mxGeometry height="50" width="85" x="315" y="140" as="geometry" />
         </mxCell>
-        <mxCell id="04_ctx" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Context window&lt;br&gt;&lt;i&gt;~2,048 tokens: cut + dropped&lt;/i&gt;" vertex="1">
+        <mxCell id="04_ctx" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Sessions and context&lt;br&gt;&lt;i&gt;who keeps history · utility models&lt;/i&gt;" vertex="1">
           <mxGeometry height="50" width="180" x="20" y="215" as="geometry" />
         </mxCell>
-        <mxCell id="04_noagent" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Agent mode needs tools&lt;br&gt;&lt;i&gt;TinyLlama ✗ · Qwen ✓&lt;/i&gt;" vertex="1">
+        <mxCell id="04_noagent" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#ffffff;strokeColor=#d79b00;" value="Local model in any harness&lt;br&gt;&lt;i&gt;via Ollama · ollama launch&lt;/i&gt;" vertex="1">
           <mxGeometry height="50" width="180" x="220" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="04_hidden" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Hidden context goes with the model&lt;/b&gt;&lt;br&gt;&lt;i&gt;cloud model = sent to the cloud&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="04_perm" parent="step04" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Each harness has its own lock&lt;/b&gt;&lt;br&gt;&lt;i&gt;permissions · session files on disk&lt;/i&gt;" vertex="1">
+          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
         </mxCell>
         <mxCell id="e12" edge="1" parent="step04" source="04_chatview" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#d79b00;edgeStyle=orthogonalEdgeStyle;" target="04_at" value="">
           <mxGeometry relative="1" as="geometry" />

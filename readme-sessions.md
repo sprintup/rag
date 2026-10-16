@@ -19,7 +19,7 @@ keeping differs.
 | | Left: `@tinyllama` in the Chat view | Right: TinyLlama Chat panel (ours) |
 |---|---|---|
 | **Who keeps the history** | **VS Code**, as a **session** | Our extension: a plain array, `history` ([extension.js:27](src/vscode-extension/extension.js#L27)) |
-| **Where** | On disk, one file per session (section 3) | In memory, in the extension host process |
+| **Where** | On disk, one file per session (section 4) | In memory, in the extension host process |
 | **Survives closing VS Code** | Yes | No |
 | **Several conversations** | Yes, listed under **Sessions** | No, just one (the panel and the TinyLlama tab share it) |
 | **Titles** | Yes, e.g. *"User greeting"*, written by a utility model | No |
@@ -42,7 +42,43 @@ starts the same way as the last one, but it has **no memory of the conversation*
 
 ---
 
-## 2. Why the TinyLlama tab and the panel show the same text
+## 2. How each harness treats context
+
+The two sides above are only two of the harnesses in this VS Code window. The **Chat**, **Claude
+Code** and **Codex** tabs are three separate harnesses (section 7 of
+[04_readme-harness.md](04_readme-harness.md)), and each keeps, trims and protects the conversation
+in its own way:
+
+| | Copilot (Chat tab) | Claude Code | Codex | Our plugin (TinyLlama chat) |
+|---|---|---|---|---|
+| **Session storage** | `%APPDATA%\Code\User\workspaceStorage\<id>\chatSessions\*.jsonl` | `~/.claude/projects/<folder>/<session>.jsonl` | `~/.codex/sessions/`, one `rollout-….jsonl` per session | None: memory only |
+| **Going back to a session** | The **Sessions** list | `/resume`, or `claude --continue` in a terminal | `codex resume` | Not possible |
+| **When the context is full** | Automatic summary (*"Compacted conversation"*) | Automatic, or `/compact` | Automatic, or `/compact` | The server cuts it: the TinyLlama server drops the oldest messages, Ollama cuts the prompt |
+| **Utility (background) model** | Yes: titles, compaction, tool selection. May be a **GitHub cloud model** even when your main model is local (settings in [readme-safety.md](readme-safety.md), section 5) | Yes: a small, fast model (Haiku by default) for background jobs. Pointed at Ollama, it must be changed too (`ANTHROPIC_DEFAULT_HAIKU_MODEL`) | Mostly the main model; `/review` can use its own `review_model` | None |
+| **Tools** | Built-in, from extensions, and MCP (`.vscode/mcp.json`); chosen in **Configure Tools** | Built-in (read, edit, shell, web, …) and MCP (`.mcp.json`) | Shell, apply patch, … and MCP (`config.toml`) | None |
+| **Permissions** | Approvals per tool; `chat.tools.global.autoApprove`; terminal sandbox and network filter settings | Permission modes (default, accept edits, plan, bypass) and allow/deny rules in `.claude/settings.json` | `approval_policy` and `sandbox_mode` (read-only, workspace-write, full access) in `config.toml` | Nothing to permit |
+| **⚠ Security points** | 118 tools on by default (rule 1); utility jobs may go to the cloud; `.github/` files in a cloned repo bring skills, agents and instructions | "Bypass permissions" (`--dangerously-skip-permissions`) removes every check; a cloned repo's `.claude/settings.json` can add hooks and permissions | Full access (`--dangerously-bypass-approvals-and-sandbox`) removes the sandbox; a cloned repo's `.codex/` folder can change settings | Plain text only, so replies can't inject HTML; listens only to `127.0.0.1` |
+
+**In every harness,** session files keep full prompts and attachments on disk, in plain text.
+
+**Things to notice:**
+- **Only our plugin forgets.** Every real harness saves sessions to disk, so you can go back to
+  them, and so can anyone with access to your user folder.
+- **"Local" depends on every model involved.** A harness can use one model for your conversation
+  and another for titles or summaries. Both need to be local for the conversation to stay local.
+- **Each harness has its own lock.** Turning tools off in Copilot's **Configure Tools** doesn't
+  restrict Claude Code or Codex, and the other way round.
+- **Opening a repository can configure a harness.** `.github/`, `.claude/` and `.codex/` folders in
+  a cloned repository can add instructions, skills, hooks or settings. Open unknown repositories in
+  Restricted Mode ([readme-safety.md](readme-safety.md), section 9).
+
+> Claude Code's and Codex's entries come from each program's settings and help text in the
+> installed versions (Claude Code 2.1.301, Codex extension 26.1007), not from a full test. Check
+> each tool's documentation for the current details.
+
+---
+
+## 3. Why the TinyLlama tab and the panel show the same text
 
 ![The TinyLlama tab on the left and the TinyLlama Chat panel on the right, showing the same conversation](docs/images/sessions-tab-and-panel.png)
 
@@ -82,7 +118,7 @@ never in the model.
 
 ---
 
-## 3. Where you can see each state
+## 4. Where you can see each state
 
 **The panel's history:** only on screen. You can also see it arrive at the server: with
 `src/inference_server.py`, each `Request:` line shows how many messages were sent, and the count
@@ -104,7 +140,7 @@ grows by two with each question.
   its title (`"customTitle": "User greeting"`) and each request, including which participant
   answered (`"extensionId": "local.tinyllama-chat"`). Each later line records a change, such as a
   new turn.
-- **Chat Debug View** (see [readme-more-info.md](readme-more-info.md)) shows the full request sent
+- **Chat Debug View** (see [readme-context.md](readme-context.md)) shows the full request sent
   for each turn.
 
 **Local vs. Copilot sessions.** The **Local** / **Copilot** choice under the input box decides
@@ -117,7 +153,7 @@ runs in a separate agent process, which keeps its own copy of the history.
 
 ---
 
-## 4. Don't ask the model about its own state
+## 5. Don't ask the model about its own state
 
 On the left, the model was asked *"is this a different session?"* and answered *"Yes, this appears
 to be a new session. Your conversation history was reset…"*. **That's wrong.** Its request
@@ -129,7 +165,7 @@ check the request instead: the server's log, or Chat Debug View.
 
 ---
 
-## 5. A quick demo
+## 6. A quick demo
 
 1. Ask both sides: *"What was my first message?"* Both should answer *"hello?"*, because both
    sent the whole history.

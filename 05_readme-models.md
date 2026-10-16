@@ -252,7 +252,7 @@ Selecting it in the model picker sends every message in that chat to Qwen.
 - **The chat** shows tool calls as separate steps, e.g. reading `SKILL.md`, followed by "Skill
   Invoked".
 - **Developer: Show Chat Debug View** shows the full request, including the tool list and the
-  skills list ([readme-more-info.md](readme-more-info.md)).
+  skills list ([readme-context.md](readme-context.md)).
 
 **6. Fallback: Ask mode with `/name`.** If Agent mode stalls (spinning on "Optimized tool
 selection" or "Considering", with nothing in Ollama's log), switch the mode to **Ask** in a new
@@ -306,7 +306,7 @@ with a local model:
   `#file` and `#selection` attachments itself. It skips text VS Code adds on its own (such as the
   skills list), and other `#` lookups aren't used.
 - **To see what a `#` reference actually added,** open the request in **Developer: Show Chat
-  Debug View** ([readme-more-info.md](readme-more-info.md)).
+  Debug View** ([readme-context.md](readme-context.md)).
 **Check that the skill was really used.** A pirate-style answer doesn't prove it: "pirate" is in
 your message and in the skill's name, and the model can react to the word alone. In testing, a
 pirate skill whose text was changed to "you are a toddler" still produced pirate answers in Ask

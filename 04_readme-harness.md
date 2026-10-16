@@ -235,6 +235,83 @@ cars** parked in the same garage.
 | Uses `.github/skills`, prompt files, Configure Tools | Yes | No, it has its own equivalents |
 | Where the model runs | Your computer, if local | The vendor's cloud |
 
+### Are the Claude Code and Codex harnesses built on the Copilot SDK?
+
+**No. Each is its vendor's own harness, and the same program as its command-line tool.** The
+VS Code extension is mostly a window onto it. You can see this in the installed extensions'
+folders (`%USERPROFILE%\.vscode\extensions\`):
+
+| Tab | Extension | What it runs | Built on |
+|---|---|---|---|
+| **Claude Code** | `anthropic.claude-code` | `resources\native-binary\claude.exe`, the **Claude Code** program, as used in a terminal | Anthropic's own harness. Anthropic offers the same agent loop to developers as the **Claude Agent SDK**. |
+| **Codex** | `openai.chatgpt` | `bin\windows-x86_64\codex.exe`, the **Codex CLI** | OpenAI's own harness. The Codex CLI is open source ([openai/codex](https://github.com/openai/codex)). |
+| **Chat** (Copilot) | built into VS Code | Copilot's agent | GitHub's harness. GitHub offers its agent runtime to developers as the **GitHub Copilot SDK**. |
+
+So there are three separate harnesses from three companies, each with its own system prompt, tools,
+permissions, context handling and settings files. None is built on another. What they share is
+the **window** (VS Code, which gives each a side bar tab) and the **pattern**: a loop that sends the
+conversation and tool definitions to a model, runs the tools it asks for, and repeats.
+
+Even the same model behaves differently in each tab, because each harness sends it different
+instructions and tools.
+
+### What the three harnesses share, and what they don't
+
+Each harness looks for skills, instructions and settings in **its own places**. `~` is your user
+folder (`%USERPROFILE%`); the other paths are in the workspace.
+
+| | Copilot (Chat tab) | Claude Code | Codex |
+|---|---|---|---|
+| **Main instructions file** ([AGENTS.md spec](https://agents.md): from OpenAI Codex and others, now the Agentic AI Foundation) | `.github/copilot-instructions.md`; also `AGENTS.md` and `CLAUDE.md` (settings `chat.useAgentsMdFile`, `chat.useClaudeMdFile`) | `CLAUDE.md`, `CLAUDE.local.md`, `~/.claude/CLAUDE.md` | `AGENTS.md`, `AGENTS.override.md`, `~/.codex/AGENTS.md` |
+| **Instructions for some files only** | `.github/instructions/*.instructions.md` (`applyTo`), `.claude/rules/`, `~/.copilot/instructions/` | `.claude/rules/` | `AGENTS.md` in a subfolder |
+| **[Skills](https://agentskills.io/specification)** (`SKILL.md`; open standard from Anthropic) | `.github/skills/`, `.claude/skills/`, `.agents/skills/`; in `~`: `~/.copilot/skills/`, `~/.claude/skills/`, `~/.agents/skills/` | `.claude/skills/`, `~/.claude/skills/` | `.agents/skills/`, `~/.codex/skills/` |
+| **Custom agents** | `.github/agents/*.agent.md`, `.claude/agents/`, `~/.copilot/agents/` | `.claude/agents/` (subagents) | `.codex/agents/` |
+| **Reusable prompts** (`/name`) | `.github/prompts/*.prompt.md` | `.claude/commands/*.md`, or skills | Skills |
+| **[MCP](https://modelcontextprotocol.io/specification/latest) servers** (from Anthropic, now the Agentic AI Foundation) | `.vscode/mcp.json` | `.mcp.json`, `~/.claude.json` | `[mcp_servers]` in `~/.codex/config.toml` |
+| **Hooks** | `.github/hooks/`, `~/.copilot/hooks/` | `hooks` in `.claude/settings.json` | `.codex/hooks.json` |
+| **Settings and permissions** | VS Code settings (`chat.tools.*`), **Configure Tools** | `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude/settings.json` | `.codex/config.toml`, `~/.codex/config.toml` (`approval_policy`, `sandbox_mode`) |
+| **Chat history** | VS Code's workspace storage ([readme-sessions.md](readme-sessions.md)) | `~/.claude/projects/` | `~/.codex/sessions/` |
+| **Models** | Any registered provider, incl. local ones | Anthropic's | OpenAI's |
+
+**Shared:**
+- **The workspace:** the same files, the same git repository, the same terminal.
+- **The skill format.** `SKILL.md` follows the open [Agent Skills](https://agentskills.io) format, so
+  one skill folder works in all three, as long as it's in a folder each one reads.
+  `.agents/skills/` is read by Copilot and Codex, and `.claude/skills/` by Copilot and Claude Code.
+- **The MCP protocol**, but not the configuration: each harness has its own list of servers.
+- **The window:** VS Code, with one side bar tab each.
+
+**Not shared:** history, settings, permissions and tool approvals, the system prompt, and the
+models. Approving a command in one tab doesn't approve it in another.
+
+**For this project:** the pirate skill and the other files in `.github/` are only seen by Copilot.
+To use the pirate skill in Claude Code too, it would also need to be in `.claude/skills/`; for
+Codex, in `.agents/skills/`.
+
+The **Agentic AI Foundation** is part of the Linux Foundation and looks after open standards for AI
+agents, so that no single company controls them. Anthropic donated MCP to it in December 2025.
+
+> These locations come from the installed versions (VS Code 1.142, Claude Code 2.1.301, Codex
+> extension 26.1007), found by searching each program for the paths it uses. They change often,
+> so check each tool's documentation for the current list.
+
+### `@`, `/` and `#`: each harness defines its own
+
+The operators look the same in every tab, but they aren't a standard: **each harness decides what
+they mean.** In Copilot's Chat view they come from VS Code's chat APIs; in Claude Code and Codex,
+from each program's own input box.
+
+| Type | Copilot (Chat tab) | Claude Code | Codex |
+|---|---|---|---|
+| **`@`** | A **chat participant**: *who* answers, e.g. `@tinyllama`, `@vscode`, `@terminal`. Extensions add them with the [Chat Participant API](https://code.visualstudio.com/api/extension-guides/ai/chat). | A **file or folder** to include (*"@ for file paths"*), or a subagent (`@agent-<name>`) | A **file** to include |
+| **`/`** | A **skill**, **prompt file** or built-in command, e.g. `/pirate`, `/word-of-the-day`, `/create-skill` | A built-in command (`/clear`, `/compact`, `/init`, …), a custom command or a skill | A built-in command (`/model`, `/approvals`, `/compact`, …) |
+| **`#`** | **Context or a tool**: `#file`, `#codebase`, `#changes`, `#fetch`, MCP tools | No special meaning | No special meaning |
+| **Other** | | `!` runs a shell command (*"! for shell mode"*) | `$` picks a skill, e.g. `$pirate` |
+
+So `@tinyllama` only works in the Chat tab, because only VS Code's harness has chat participants,
+and `/pirate` only lists skills that harness reads (see the table above). Where the `/` commands
+in the Chat view come from is explained in section 7 of [readme-context.md](readme-context.md).
+
 ### Is there a "harness API"?
 
 Not a single one. There are a few layers:
@@ -254,11 +331,76 @@ things: the Claude Code and Codex tabs run their own harness inside, while our T
 plain chat client with no harness at all (no tools, skills or agent loop). VS Code doesn't use ACP
 for its tabs.
 
+**Building your own harness**, with the features the three above have, is explained in
+[readme-custom-harness.md](readme-custom-harness.md): the files you need, which features VS Code's
+Chat view gives you (`@`, `/`, `#`, drag and drop) and which you build yourself in your own tab, and
+how to add the agent loop.
+
 **For the class:** models plug in through **providers**, tools through **MCP**, and whole agents
 through **harness SDKs** or **ACP**. Any extension can add a tab, but what's inside the tab, from a
 plain chat client to a full agent, is up to the extension.
 
 > These APIs and SDKs change quickly. Check the current documentation before presenting.
+
+---
+
+## 8. Local models in each harness, and the hidden context they send
+
+### Which harnesses can use a local model
+
+All three can, with **Ollama**. Ollama answers both OpenAI-style requests (`/v1/chat/completions`)
+and, since recent versions, Anthropic-style ones (`/v1/messages`), and its `ollama launch` command
+starts several harnesses already pointed at it. On this computer (Ollama 0.40.4), `ollama launch`
+lists `claude` (Claude Code), `codex` (Codex) and `copilot` (Copilot CLI), among others.
+
+| Harness | Local model? | How | Tried here |
+|---|---|---|---|
+| **Copilot** (Chat tab, **Local** session) | Yes | Ollama's VS Code extension adds its models to the model picker ([05_readme-models.md](05_readme-models.md)) | Yes: Qwen 3.5, in Ask and Agent mode |
+| **Copilot CLI** | Yes | `ollama launch copilot` | No |
+| **Claude Code** | Yes | In a terminal: `ollama launch claude`. In the tab: set `ANTHROPIC_BASE_URL` to `http://localhost:11434` in the `claudeCode.environmentVariables` setting, or under `"env"` in `.claude/settings.json` | Ollama answered an Anthropic-style request from Qwen; Claude Code itself not tried |
+| **Codex** | Yes | In a terminal: `codex --oss` (Ollama or LM Studio), or `ollama launch codex`. The tab runs the Codex CLI, so it uses the same `~/.codex/config.toml` | No |
+| **Our plugin** (`@tinyllama`, the TinyLlama chat) | Always | `tinyllama.serverUrl` | Yes: TinyLlama and Qwen |
+
+**A harness written for big cloud models doesn't automatically work well with a small one.** Its
+hidden instructions and tool list must fit the local model's context window (see
+`OLLAMA_CONTEXT_LENGTH` in [05_readme-models.md](05_readme-models.md)), and the model must be good
+at calling tools. Expect a 4B model to struggle with long agent tasks in any of them.
+
+Some harnesses also use a **second, smaller model** for background jobs (section 2 of
+[readme-sessions.md](readme-sessions.md)). Point that one at the local server too, or those jobs
+fail or go to the cloud.
+
+### The hidden context: what each harness sends with every message
+
+Your message is only a small part of each request. Every harness wraps it in its own hidden
+context, and **all of it goes to wherever the model runs**: your GPU for a local model, the
+vendor's servers for a cloud model.
+
+| Part | Copilot | Claude Code | Codex | Our plugin |
+|---|---|---|---|---|
+| **System prompt** (who to be, how to behave) | Copilot's own, several thousand tokens | Claude Code's own | Codex's own | One line: *"You are a helpful coding assistant…"* |
+| **Tool definitions** | In Agent mode, every tool turned on in **Configure Tools**, incl. MCP tools | Its built-in tools (read, edit, shell, web, …) and MCP tools | Its tools (shell, apply patch, …) and MCP tools | None |
+| **Instruction files** | `.github/copilot-instructions.md`, matching `.instructions.md` files, `AGENTS.md`, … | `CLAUDE.md` files, `.claude/rules/` | `AGENTS.md` files | None |
+| **Skills list** | Name and description of each skill and prompt file (the customizations index) | Name and description of each skill | Name and description of each skill | None |
+| **Environment** | Operating system, workspace folder | Working folder, operating system, git status, date | Working folder, sandbox and approval settings | None |
+| **History and attachments** | This session's turns, attached files | This session's turns, `@` files | This session's turns, `@` files | Earlier turns (plugin) or this participant's turns (`@tinyllama`) |
+| **Size of "Hello?"** | About **9,000 tokens** in Agent mode (measured with Ollama's log) | Not measured here | Not measured here | A few hundred tokens |
+
+**What this means:**
+- **With a cloud model,** all of it leaves your computer: your instruction files, the names of your
+  skills, your folder layout and git status, and every attached or `@` file.
+- **With a local model,** it stays on your computer, apart from any background jobs that go to the
+  cloud (section 5 of [readme-safety.md](readme-safety.md)).
+- **Instruction files and skills are obeyed like your own words.** Whatever is in them is in every
+  request, including anything injected into a file from a public collection
+  ([06_readme-mcp-agents.md](06_readme-mcp-agents.md)).
+- **To see it:** for Copilot, use **Chat Debug View**. For any harness pointed at Ollama, Ollama's
+  debug log shows the full request as the model received it. Both are in
+  [readme-context.md](readme-context.md). Pointing a harness at a local model is the easiest way to
+  see what it really sends.
+
+> Claude Code's and Codex's hidden context is described from what each program contains, not
+> measured here. Check it with Ollama's log before quoting sizes.
 
 ---
 

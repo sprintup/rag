@@ -288,7 +288,7 @@ person's name often find the wrong pages. Questions phrased like the document wo
 | [04_readme-harness.md](04_readme-harness.md) | Opening the Extension Development Host, and using `@tinyllama` and skills (e.g. `/pirate`) in Copilot's Chat view. |
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen 2.5, using Ollama, Foundry Local or this project's own server, including Copilot Agent mode. |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP and custom agents: the Fetch server ([.vscode/mcp.json](.vscode/mcp.json)) and the Idea Generator agent ([.github/agents/](.github/agents/)), used together to design an activity for kids' word of the day. |
-| [readme-more-info.md](readme-more-info.md) | Inspecting the hidden context VS Code sends to the model (Chat Debug View, agent logs, Ollama's debug log). |
+| [readme-context.md](readme-context.md) | Inspecting the hidden context VS Code sends to the model (Chat Debug View, agent logs, Ollama's debug log). |
 | [readme-model-training.md](readme-model-training.md) | How to fine-tune your own model (LoRA/QLoRA on a small Qwen) and publish it on Hugging Face, then use it here or in Ollama. |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running and demoing the app inside the dev container / Codespaces, with `bash` commands. |
 | [01_readme-setup.md](01_readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |
