@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+// A tiny Streamlit component for src/live_qa.py: keeps this window's own progress (its checklist of
+// completed objectives and 🧠 Think) in the browser's local storage. Until the app says it has the
+// saved progress ("loaded"), every render hands it over again: a single hand-over can arrive while the
+// page is still starting, and be missed. After that, every render saves the progress the app sends.
+// It speaks Streamlit's component messages directly, so it needs no build step.
+
+// Each browser window has its own progress: a random id, made when the window first opens the app and
+// kept in its session storage (per window, kept through reloads), starts the local storage key, so
+// windows sharing the browser's local storage don't overwrite each other's.
+function windowId() {
+  try {
+    let id = sessionStorage.getItem("envie-live-qa-window");
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
+      sessionStorage.setItem("envie-live-qa-window", id);
+    }
+    return id;
+  } catch (error) { return "window"; }
+}
+const KEY = windowId() + "-envie-live-qa-progress";
+let handovers = 0;
+
+function send(type, data) {
+  window.parent.postMessage({isStreamlitMessage: true, type, ...data}, "*");
+}
+
+window.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "streamlit:render") return;
+  const args = event.data.args || {};
+  if (!args.loaded) {
+    // Hand over what's saved; the count makes each hand-over new to Streamlit
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (error) { saved = {}; }
+    handovers += 1;
+    send("streamlit:setComponentValue", {value: {saved, handover: handovers, window: windowId()}, dataType: "json"});
+  } else if (args.save !== null && args.save !== undefined) {
+    try { localStorage.setItem(KEY, JSON.stringify(args.save)); }
+    catch (error) { /* storage blocked, e.g. a private window: progress lasts for this page only */ }
+  }
+});
+
+send("streamlit:componentReady", {apiVersion: 1});
+send("streamlit:setFrameHeight", {height: 0});
+</script>
+</body>
+</html>

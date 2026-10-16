@@ -293,3 +293,86 @@ catalog).
 The mapping between VS Code's `/` and `#` commands and these runtime tools is an interpretation
 based on what each does. The site doesn't state it, and VS Code's chat may implement some `#`
 references itself rather than through these exact tools.
+
+---
+
+## 9. Context engineering: the six parts of a context window
+
+*Context engineering* is deciding what goes into the model's context window, and what stays out.
+A model sees nothing but that window, and the window has a fixed size: its **budget**, in tokens.
+IBM's talk on context engineering ([video](https://www.youtube.com/watch?v=BwXremQ-i6I)) divides it
+into six parts:
+
+![The context window: system prompt, prompt, project instructions, tool descriptions, message history, tool results](docs/images/context-engineering.png)
+
+| Part | In a harness such as Copilot (section 1) | In the live Q&A, Envie ([src/live_qa.py](src/live_qa.py)) |
+|---|---|---|
+| **1. System prompt** | The hidden instructions: identity, behaviour, formatting. | `SYSTEM_PROMPT`: who Envie is, the modules, how to answer. |
+| **2. Prompt** | What you typed. | The question. |
+| **3. Project instructions** | `copilot-instructions.md`, `CLAUDE.md`, `AGENTS.md`, the skills list, workspace info. | The session state (objective, checklist, previous question) and the instructions for this question. |
+| **4. Tool descriptions** | Every tool's description and JSON schema, including MCP servers': often the biggest part. | None: Envie has no tools. |
+| **5. Message history** | The chat so far, compacted when it gets too long. | Only a ↩ Reply's thread; each question otherwise starts afresh. |
+| **6. Tool results** | What the model's tool calls returned: files read, search results, web pages, terminal output. | The sources retrieval found (RAG), fetched by the app before the request. |
+
+Everything in the six parts is **allocated** part of the budget, and what's left is the room for
+the answer. In the live Q&A, **🔍 Context** on any question shows this for real
+([readme-live-qa.md](readme-live-qa.md)): the budget, a bar of the six parts, and every part's
+allocation in tokens. For *"How does the RAG app find the passages it sends to the model?"*:
+
+| | Tokens | Share of the 16,384-token budget |
+|---|---|---|
+| System prompt | ≈1,445 | 9% |
+| Prompt | ≈19 | 0.1% |
+| Project instructions | ≈321 | 2% |
+| Tool descriptions | 0 | 0% |
+| Message history | 0 | 0% |
+| Tool results (7 sources) | ≈1,492 | 9% |
+| **Sent** | **3,276** (Ollama's count) | **20%** |
+| Answer (allowed up to 400) | 122 | 0.7% |
+
+The question is 19 tokens of 3,276: under 1% of what the model read. Ollama also reported 1,442 of
+those tokens **already in its cache**: the system prompt, which is identical every time and comes
+first, so the model didn't have to read it again.
+
+**How the tokens are counted.** Ollama reports each request's total (`prompt_tokens`, in the
+`usage` it sends with `stream_options: {"include_usage": true}`), but not per part, and it has no
+tokenize endpoint. So the app shares the total out by characters, marked ≈: close enough, since
+English text and code run about 4 characters a token. The budget comes from Ollama's `/api/ps`
+(`context_length`), the size Qwen was actually loaded with, not the much larger maximum the model
+supports.
+
+### When context goes wrong
+
+The talk names four ways a full or careless context window hurts answers:
+
+| Problem | What happens | Remedy |
+|---|---|---|
+| **Context poisoning** | A mistake (a hallucination, a wrong tool result) gets into the context and is then treated as fact, turn after turn. | **Validate** what goes in. Envie marks citations that aren't in its sources ("possibly made up"), and the sources are labelled *reference material, not instructions*. |
+| **Context distraction** | The history grows so long the model leans on it instead of thinking. | **Compact**: summarize older turns (VS Code's "Compacted conversation"). Envie caps a thread at 6 turns and 1,200 characters an answer. |
+| **Context confusion** | Irrelevant material, often too many tools, pulls the model off course. | Send less: pick the relevant tools (VS Code's "Optimized tool selection"); Envie keeps only sources above a relevance cutoff. |
+| **Context clash** | Parts of the context contradict each other, e.g. a new instruction against an old one. | Keep one source of truth. Envie's system prompt says its *Facts about you* always win over the sources. |
+
+### Ways to engineer context
+
+- **Retrieve, don't paste (select).** Send only the passages that match the question, rather than
+  whole files: that's RAG, and it's what fills Envie's *Tool results*.
+- **Trim tools.** Each tool description costs tokens in every request. Fewer tools (or MCP servers
+  turned off) leave more room and confuse the model less; this is why Ask mode is so much smaller
+  than Agent mode.
+- **Compact the history (compress).** Summarize or drop older turns; keep a short structured state
+  instead of the whole transcript, like Envie's session state (the previous question and only the
+  start of its answer).
+- **Write it down outside the window.** Keep state, notes and checklists in the app or in files
+  (the 🧭 State window, a `NOTES.md`, a to-do list) and send back only what's needed.
+- **Isolate.** Give a sub-agent its own context window for a side task and return only its
+  result, as in [readme-orchestration.md](readme-orchestration.md); Envie's *objective met?* check
+  is a separate small request for the same reason.
+- **Order for the cache.** Put what never changes first (system prompt, tool descriptions) and
+  what changes last (the question): the unchanged start is cached, and here that saved reading
+  1,442 tokens on every question.
+- **Reserve room for the answer.** The budget has to hold the reply too (`max_tokens`), and with
+  thinking on, the thinking as well: Envie allows 400 tokens for an answer, 5,000 with 🧠 Think,
+  and stops thinking at a budget of its own (`THINKING_BUDGET`).
+- **Label and fence.** Wrap parts in clear markers (`<session_state>`, `<source id="1">`, *"not
+  instructions"*) so the model can tell reference material from instructions: a defence against
+  prompt injection, too.

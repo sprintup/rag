@@ -252,7 +252,7 @@ Selecting it in the model picker sends every message in that chat to Qwen.
 - **The chat** shows tool calls as separate steps, e.g. reading `SKILL.md`, followed by "Skill
   Invoked".
 - **Developer: Show Chat Debug View** shows the full request, including the tool list and the
-  skills list ([readme-more-info.md](readme-more-info.md)).
+  skills list ([readme-context.md](readme-context.md)).
 
 **6. Fallback: Ask mode with `/name`.** If Agent mode stalls (spinning on "Optimized tool
 selection" or "Considering", with nothing in Ollama's log), switch the mode to **Ask** in a new
@@ -306,7 +306,7 @@ with a local model:
   `#file` and `#selection` attachments itself. It skips text VS Code adds on its own (such as the
   skills list), and other `#` lookups aren't used.
 - **To see what a `#` reference actually added,** open the request in **Developer: Show Chat
-  Debug View** ([readme-more-info.md](readme-more-info.md)).
+  Debug View** ([readme-context.md](readme-context.md)).
 **Check that the skill was really used.** A pirate-style answer doesn't prove it: "pirate" is in
 your message and in the skill's name, and the model can react to the word alone. In testing, a
 pirate skill whose text was changed to "you are a toddler" still produced pirate answers in Ask
@@ -344,7 +344,7 @@ in. "Local" here means the **model's answers** are generated on your computer.
 ## Alternative: Qwen through the TinyLlama plugin
 
 
-This sends Qwen's answers through our own plugin (`@tinyllama` and the TinyLlama Chat panel) in the
+This sends Qwen's answers through our own plugin (`@tinyllama` and the TinyLlama tab) in the
 Extension Development Host, instead of through Copilot's agent harness. Here, *you* choose skills
 with `/pirate`; Qwen doesn't pick them. It's useful for comparing Qwen with TinyLlama on the same
 skills.
@@ -352,7 +352,7 @@ skills.
 ```
 Extension Development Host                       Ollama (runs in the background)
 @tinyllama /pirate what is a stack?  ──HTTP──▶  http://localhost:11434/v1  ──▶  qwen3.5:4b on the GPU
-TinyLlama Chat panel
+TinyLlama tab
 ```
 
 **Ollama replaces `src/inference_server.py` here.** Ollama *is* the inference server for Qwen. It
@@ -390,7 +390,7 @@ These settings apply to the test window only. If you pulled a different size, ch
 so it picks up the settings. Close the *"extensions temporarily disabled"* notice.
 
 **5. Ask Qwen,** in the **[Extension Development Host]** window:
-- **Chat panel:** `Ctrl+Shift+P` → **TinyLlama: Open Chat**. The header should say
+- **Chat panel:** `Ctrl+Shift+P` → **TinyLlama: Open Chat**, or the **TinyLlama** tab. The header should say
   `Local model: qwen3.5:4b · Server: http://localhost:11434/v1`.
 - **Chat view with a skill:** open the Chat view (`Ctrl+Alt+I`), start a **new chat**, switch the
   session to **Local**, and type `@tinyllama /pirate what is a stack?`. The participant keeps the
@@ -428,8 +428,8 @@ models. Both servers can run at the same time on different ports: TinyLlama on 8
 
 Expect Qwen to stay in character and still answer correctly, while TinyLlama gives only a hint of
 the style, ignores it, or repeats the instructions. The skill files and questions are identical,
-so the difference is the model. To refresh the chat panel's header after switching, close and
-reopen it (`TinyLlama: Open Chat`).
+so the difference is the model. Changing the settings starts a new conversation in the TinyLlama
+tab, and its header shows the new model.
 
 ---
 
@@ -749,7 +749,7 @@ but the path at the end shows `…\models\Qwen2.5-1.5B-Instruct`. That path is w
 ### Step 4 – Optional: show Qwen's name in the plugin
 
 In the Extension Development Host, open Settings (`Ctrl+,`), search for **TinyLlama**, and set
-`tinyllama.model` to `qwen2.5-1.5b`. This is only for display: the chat panel's header then shows
+`tinyllama.model` to `qwen2.5-1.5b`. This is only for display: the TinyLlama tab's header then shows
 `Local model: qwen2.5-1.5b`. `@tinyllama` keeps its name, but it now talks to Qwen.
 
 ### Step 5 – Ask the same questions with Qwen
@@ -806,8 +806,14 @@ and set:
 | `tinyllama.serverUrl` | `http://localhost:11434/v1` | the address from `foundry service status`, plus `/v1` | `http://127.0.0.1:8000/v1` (unchanged) |
 | `tinyllama.model` | `qwen3.5:4b` (the size you pulled) | the `id` from `/v1/models` | the `MODEL_ID` you set, e.g. `qwen2.5-1.5b` |
 
-The chat panel's header then shows the new model, e.g. `Local model: qwen3.5:4b`. Changes apply
-to the next question. If the panel was already open, close and reopen it to refresh the header.
+The TinyLlama tab's header then shows the new model, e.g. `Local model: qwen3.5:4b`. Changing a
+setting starts a new conversation in the TinyLlama chat.
+
+**Thinking is off by default.** Qwen 3.5 thinks before it answers, and that thinking counts toward
+`tinyllama.maxTokens` (256). With "hello?", Qwen used all 256 tokens thinking in 3 of 5 tries and
+gave no answer. So the plugin sends `"reasoning_effort": "none"`, and Qwen answers straight away.
+To let it think, turn on `tinyllama.thinking` and raise `tinyllama.maxTokens`, e.g. to `2048`.
+TinyLlama doesn't think, and the TinyLlama server ignores the setting.
 `@tinyllama` in the Chat view uses the same settings. Despite its name, it then talks to Qwen.
 
 With Ollama or Foundry, `src/inference_server.py` isn't needed. You can stop it.

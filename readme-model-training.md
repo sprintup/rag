@@ -203,7 +203,7 @@ behavior, which fine-tuning handles well.
 
 > **An example, not a product.** The vocabulary tutor illustrates the fine-tuning process. A model
 > actually used with children would need educator-reviewed training data, content-safety testing,
-> privacy compliance and ongoing monitoring. See [readme-safety.md](readme-safety.md), section 10.
+> privacy compliance and ongoing monitoring.
 
 ### What you'll need
 

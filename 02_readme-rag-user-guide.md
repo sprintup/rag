@@ -169,8 +169,7 @@ the file. A pickle file from someone else is as dangerous as running their progr
 `src/main.py` has to opt in explicitly with `allow_dangerous_deserialization=True` when it loads the
 folder ([src/main.py:142](src/main.py#L142)). Here, it's safe because the app only loads the index
 it built itself. ⚠ **Never load a `vectorstore/` folder you didn't create.** If you're unsure where
-one came from, delete it: the app rebuilds it from `uploaded_docs/`. See
-[readme-safety.md](readme-safety.md), section 2.
+one came from, delete it: the app rebuilds it from `uploaded_docs/`.
 
 ### Step 5 – Retrieving relevant chunks (Component #4)
 When you ask a question, the question is also turned into an embedding. FAISS finds the
@@ -278,17 +277,17 @@ person's name often find the wrong pages. Questions phrased like the document wo
 
 | File / folder | Purpose |
 |---|---|
-| [src/](src/) | All the Python code: [main.py](src/main.py) is the app; [small_model.py](src/small_model.py) is a terminal-only TinyLlama test (`python src/small_model.py`). |
+| [src/](src/) | All the Python code: [main.py](src/main.py) is the app; [live_qa.py](src/live_qa.py) is a shared live Q&A about this project, for presenting ([readme-live-qa.md](readme-live-qa.md)); [small_model.py](src/small_model.py) is a terminal-only TinyLlama test (`python src/small_model.py`). |
 | [requirements.txt](requirements.txt) | Libraries to install, with exact versions. |
 | `models/` | The downloaded models: the files the app runs. Not committed to git (too large). |
 | `vectorstore/` | Saved search index: `index.faiss` (vectors) and `index.pkl` (a pickle file with the chunks' text and sources). Safe to delete; it is rebuilt from `uploaded_docs/`. ⚠ Never load one you didn't create (see Step 4). |
 | `venv_rag/` | The Python environment (see [01_readme-setup.md](01_readme-setup.md)). |
 | [.devcontainer/](.devcontainer/) | Dev container config for running in GitHub Codespaces; `post-create.sh` installs everything and downloads the models. |
-| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat): its files, how it works, and how it could be published. |
+| [03_readme-plugin-startup.md](03_readme-plugin-startup.md) | The TinyLlama VS Code plugin's own chat panel (`Ctrl+Shift+P` → TinyLlama: Open Chat) and tab: its files, how it works, and how it could be published. |
 | [04_readme-harness.md](04_readme-harness.md) | Opening the Extension Development Host, and using `@tinyllama` and skills (e.g. `/pirate`) in Copilot's Chat view. |
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen 2.5, using Ollama, Foundry Local or this project's own server, including Copilot Agent mode. |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP and custom agents: the Fetch server ([.vscode/mcp.json](.vscode/mcp.json)) and the Idea Generator agent ([.github/agents/](.github/agents/)), used together to design an activity for kids' word of the day. |
-| [readme-more-info.md](readme-more-info.md) | Inspecting the hidden context VS Code sends to the model (Chat Debug View, agent logs, Ollama's debug log). |
+| [readme-context.md](readme-context.md) | Inspecting the hidden context VS Code sends to the model (Chat Debug View, agent logs, Ollama's debug log). |
 | [readme-model-training.md](readme-model-training.md) | How to fine-tune your own model (LoRA/QLoRA on a small Qwen) and publish it on Hugging Face, then use it here or in Ollama. |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running and demoing the app inside the dev container / Codespaces, with `bash` commands. |
 | [01_readme-setup.md](01_readme-setup.md) | Installation, downloading models from Hugging Face, and what changed from the original. |

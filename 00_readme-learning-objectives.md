@@ -1,8 +1,8 @@
 # Learning Objectives and Demo Plan
 
 This is the plan for presenting the project in six steps, **01 to 06**, matching the numbered
-guides. Each step has **at most three learning objectives** and **a demonstration of about 8 to
-10 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
+guides. Each step has **at most three learning objectives** (four in step 04, which adds safety rule 3)
+and **a demonstration of about 8 to 13 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
 for a little over an hour. Each objective completes the sentence
 **"After this step, participants will be able to …"**.
 
@@ -42,6 +42,12 @@ git switch --detach 378b56c
 - [ ] Start the server: `python src/inference_server.py` (in its own terminal, so you can show its log).
 - [ ] **Terminal → Run Task… → Run TinyLlama Plugin**, to open the Extension Development Host.
 - [ ] In that window: a **new chat**, session **Local**, mode **Ask**.
+- [ ] In your **main** VS Code window (not the test window, which has extensions turned off): the
+      **Claude Code** and **Codex** extensions installed and signed in, so their tabs work in step 04.
+- [ ] For step 04's local Claude Code: Ollama running with `OLLAMA_CONTEXT_LENGTH` raised (e.g.
+      `32768`), and `ollama launch claude` tried once with `qwen3.5:4b`, so nothing installs live.
+- [ ] For step 04's rule 3 demo: **no** real `.env` anywhere in the project; the deny rule ready to
+      paste; a screenshot of the refusal as a backup.
 
 After step 04, go back to the latest version **before** step 05:
 ```powershell
@@ -78,7 +84,7 @@ push, in a browser, or printed.
 ## The safety thread
 
 Safety is one of the most important parts of the presentation. It builds up across the steps, and
-participants should leave able to explain these two rules:
+participants should leave able to explain these three rules:
 
 1. **⚠ Disable tools by default.** In Agent mode, VS Code turns on every tool, 118 on this
    computer: editing files, running terminal commands, fetching web pages, acting on GitHub. A
@@ -89,6 +95,11 @@ participants should leave able to explain these two rules:
    from a public collection, a marketplace or a cloned repository can hide injected instructions,
    or grant itself broad tools. Read the raw file and its `tools:` list before using it. *(Steps 04,
    05 and 06)*
+3. **⚠ Keep secrets out of the model's reach.** `.gitignore` only keeps a file out of Git, not out
+   of the model's context. An agent can read `.env` with its tools, often without asking, and send
+   it to a cloud model; a cloud agent takes everything committed. Keep secrets outside the project
+   folder, block reading them in each harness, and don't attach or open them while chatting.
+   *(Step 04)*
 
 Supporting points along the way:
 - "Local" protects your data from the model's maker. It doesn't limit what **tools** can do on your
@@ -100,8 +111,8 @@ Supporting points along the way:
 - ⚠ This is an example project, not a product: an adult reviews every generated activity before
   it's used with children. *(Step 06)*
 
-All safety and security points, including local servers on the network, pinning downloads,
-privacy, logs and credentials, are collected in [readme-safety.md](readme-safety.md).
+The safety concerns around AI harnesses, their tools and the models they use are collected in
+[readme-safety.md](readme-safety.md).
 
 ---
 
@@ -217,30 +228,57 @@ server once (model loading takes 10–30 seconds).
 
 ---
 
-## Step 04 – The harness: Copilot Chat, `@tinyllama`, skills and their limits (10 minutes)
+## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (13 minutes)
 
-Guide: [04_readme-harness.md](04_readme-harness.md)
+Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8),
+[readme-sessions.md](readme-sessions.md), and section 3 of [readme-safety.md](readme-safety.md)
 
 **Learning objectives:**
-1. **Distinguish** what a harness adds around a model: a **chat participant** (`@tinyllama`: *who*
-   answers), **skills** (`/pirate`: *what to do*, packaged in a `SKILL.md` file) and **context**
-   (files you attach).
-2. **Explain** how a model's **context window** limits what it can read. TinyLlama reads only about
-   2,048 tokens, so attachments get cut and older messages get dropped.
-3. **Explain** why a small model like TinyLlama can't work in **Agent mode**: it can't call tools,
-   so it can't read files or load skills by itself.
+1. **Distinguish** what the `@`, `/` and `#` operators do, and **recognize** that each **harness**
+   defines them. In Copilot's Chat tab, `@` picks *who* answers (a chat participant, `@tinyllama`),
+   `/` picks *what to do* (a skill or prompt file, `/pirate`) and `#` adds context or a tool. In
+   Claude Code and Codex, `@` attaches a file, `#` means nothing, and Codex uses `$` for skills.
+   Copilot, Claude Code and Codex are three separate harnesses from three companies, each reading
+   its own folders.
+2. **Compare** how harnesses handle context and **orchestrate agents**: who keeps the history
+   (sessions, and where they're saved), what happens when the context window fills up, which
+   **utility models** see the conversation, which tools are offered, ⚠ each harness's own
+   permission settings, and how agents work together in each: **handoffs** (Copilot only,
+   `handoffs:` in `.agent.md`), **subagents** (all three) and **teams** (experimental in Claude
+   Code and Codex). Handoffs don't carry over between harnesses.
+3. **Explain** how each harness can run a **local model** like Qwen. Each harness is a program on
+   your computer, separate from the model: Claude Code's
+   `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-<platform>\resources\native-binary\claude.exe`,
+   Codex's `%USERPROFILE%\.vscode\extensions\openai.chatgpt-<version>-<platform>\bin\<platform>\codex.exe`,
+   and, for Copilot, a Node.js package inside VS Code's built-in Copilot extension. The **VS Code
+   tab is a front end for the CLI**: it starts that program and passes messages to it as JSON, so
+   the CLI and the tab connect to a local model the same way (Claude Code: `ollama launch claude`
+   or `ANTHROPIC_BASE_URL`; Codex: `codex --oss` or `config.toml`; Copilot: the model picker, or
+   `ollama launch copilot` for the CLI).
+4. ⚠ **Explain what leaves your computer, and how to keep secrets out of it** (safety rule 3).
+   Each harness sends **hidden context** with every message (system prompt, tools, instruction
+   files, skills list, environment), which goes wherever the model runs. A `.env` file isn't sent
+   on its own, but **`.gitignore` doesn't keep it out of the model's context**: an agent can read
+   it with its tools, often without asking, and a cloud agent takes everything committed. Keep
+   secrets outside the project folder, block reading them in each harness (e.g. Claude Code's
+   `permissions.deny`), and don't attach or open them while chatting.
 
 **Demonstration:**
 | Time | What you do | What to point out |
 |---|---|---|
-| 2 min | In the Extension Development Host: Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` | The same local model, now inside a harness. The **Chat \| Claude Code \| Codex** tabs come with VS Code itself; our plugin adds `@tinyllama` inside the Chat tab. |
-| 3 min | **Add Context…** → attach `readme.md`, and ask `@tinyllama summarize this`. Show the server terminal. | The reply starts with *"Only the first 3,000 of … characters were sent"*, and the server log shows the prompt size. A bigger model reads more; every model has a limit. |
-| 3 min | Switch the mode from **Ask** to **Agent** and ask `@tinyllama` again. Then, in a terminal, run `ollama show qwen3.5:4b` and point at its **Capabilities**. | TinyLlama has no tool calling: our server never receives tools, and Agent mode needs a model that can call them. Qwen 3.5 lists `tools` (step 05). |
-| 2 min | ⚠ Open `.github/skills/pirate/SKILL.md` in the editor (raw, not the preview). | A skill is just Markdown the model obeys. Anyone could write one, so read before you install. |
+| 2 min | In the Extension Development Host (commit `378b56c`): Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` Then ⚠ open `.github/skills/pirate/SKILL.md` raw. | `@` = who answers, `/` = what to do: our plugin adds `@tinyllama`, VS Code's harness finds `/pirate` in `.github/skills/`. A skill is Markdown the model obeys (rule 2). |
+| 2 min | In your **main** VS Code window, type `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs. Show the operators table (04, section 7). | The same keys mean different things in each tab: `@` is a participant in one and a file in the others. `/pirate` only appears in the Chat tab, because only Copilot reads `.github/skills/`. Three harnesses, three sets of folders. |
+| 3 min | Side by side: `@tinyllama` in the Chat view (left) and **TinyLlama: Open Chat** (right). Ask both *"What was my first message?"*, then **New Session** / **Clear** and ask again. Show the **Sessions** list. | The model remembers nothing: each program keeps the history and resends it. VS Code saves sessions to disk; our panel only in memory. The session title came from a **utility model**. Show the context table (readme-sessions, section 2), then the orchestration table (04, section 7): handoffs are Copilot-only buttons; all three have subagents. |
+| 3 min | Show the program behind the Claude Code tab: `claude.exe` in the extension's `resources\native-binary\` folder. In a terminal, run `ollama launch claude` and choose `qwen3.5:4b`; press **Shift+Tab** out of auto mode. Then show the hidden-context table (04, section 8). | The tab is a front end for the CLI: the same program, so the same way to connect a local model. Claude Code now runs on your GPU, and warns it doesn't know Qwen's context size. Its hidden prompt is large; Copilot's is about 9,000 tokens for "Hello?". |
+| 3 min | ⚠ Rule 3, live and safely: create a dummy `.env` containing `DEMO_TOKEN=not-a-real-secret`. In the Claude Code terminal on Qwen, ask *"What settings does this project use?"* Then add the deny rule to `.claude/settings.json`, restart Claude Code, and ask again. Delete the dummy `.env` afterwards. | `.env` is in `.gitignore`, yet the agent can read it, probably without asking. With a cloud model, the token would now be with the vendor. After the deny rule, the read is refused. Each harness has its own lock: name Copilot's **Configure Tools**, Claude Code's permission modes and deny rules, and Codex's `sandbox_mode`. |
 
-**Prepare beforehand:** on commit `378b56c` (see the pre-flight checklist); the inference server
-running; the test window open with a new **Local**, **Ask** chat. Rehearse the Agent-mode moment, and
-note what VS Code shows on your setup when `@tinyllama` is used in Agent mode.
+**Prepare beforehand:** the Extension Development Host on commit `378b56c` with the inference
+server running (see the pre-flight checklist); your **main** VS Code window with the Claude Code
+and Codex extensions installed and signed in; [readme-sessions.md](readme-sessions.md) and section 8
+of [04_readme-harness.md](04_readme-harness.md) open for the tables. For the rule 3 demo, use only
+the dummy token and the **local** model, and rehearse it: a small model may not read `.env` every
+time, so have the deny rule's refusal ready as a screenshot. Why small models can't use Agent mode
+is covered in step 05.
 
 **Afterwards:** `git switch main`, and close the Extension Development Host, before step 05.
 
@@ -308,11 +346,11 @@ changes daily.
 | 01 Setup | 10 | Describe training vs. inference · Explain what Ollama abstracts away · ⚠ Explain a model's supply chain and bias |
 | 02 RAG | 10 | Describe the RAG steps · Explain sources · Demonstrate local inference |
 | 03 Serving inference | 8 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
-| 04 The harness | 10 | Distinguish @, / and context · Explain context limits · Explain no Agent mode for small models |
+| 04 Harnesses | 13 | Distinguish @, / and # per harness · ⚠ Compare context handling and orchestration · Explain local models and CLI vs. tab · ⚠ Explain what leaves your computer, and keeping secrets out |
 | 05 Models | 10 | Compare models by version, size and origin · Explain tool conditions · ⚠ Explain tools off by default |
 | 06 MCP and agents | 10 | Describe MCP · Distinguish instruction files · ⚠ Describe injections in public `.md` files |
-| **Total** | **58** | 18 objectives |
+| **Total** | **61** | 19 objectives |
 
 **For a quick check of learning,** ask participants at the end of each step to explain one objective
-to the person next to them in one minute. End with the two safety rules: they should be able to
-state both.
+to the person next to them in one minute. End with the three safety rules: they should be able to
+state all three.

@@ -17,13 +17,16 @@ PowerShell commands.
 ## 1. Check the setup finished
 
 When the container was created, [.devcontainer/post-create.sh](.devcontainer/post-create.sh) ran
-once. It installed the libraries and downloaded both models. Check the models are there:
+once. It installed the libraries and downloaded both models, then installed Ollama with Qwen 3.5
+for the live Q&A (section 5). Check the models are there:
 
 ```bash
 ls models/TinyLlama models/all-MiniLM-L6-v2
+ollama list
 ```
 
-You should see files including `model.safetensors` in each. If a folder is missing or empty,
+You should see files including `model.safetensors` in each folder, and `qwen3.5:4b` in Ollama's
+list. If a folder is missing or empty,
 or the setup failed partway, run the script again. It skips anything already downloaded:
 
 ```bash
@@ -110,11 +113,20 @@ ls -lh models/TinyLlama
 `model.safetensors`, about 2.1 GB, is the model itself. It's the folder shown as **Location** in
 the app.
 
-## 5. Useful commands
+## 5. Live Q&A: the class asks Envie about this project
+
+For a presentation, [src/live_qa.py](src/live_qa.py) runs Envie as one shared chat that the whole
+class can ask questions in, answered one at a time from this project's own files. Starting it here,
+sharing it, and trying it on your own computer first: [readme-live-qa.md](readme-live-qa.md).
+
+## 6. Useful commands
 
 | Task | Command |
 |---|---|
 | Run the app | `streamlit run src/main.py` |
+| Run the live Q&A ([readme-live-qa.md](readme-live-qa.md)) | `streamlit run src/live_qa.py` |
+| Start Ollama, if it isn't running | `nohup ollama serve >/tmp/ollama.log 2>&1 &` |
+| See whether Qwen is loaded, and how much memory it uses | `ollama ps` |
 | Terminal-only model test | `python src/small_model.py` |
 | Re-run setup (install + download models) | `bash .devcontainer/post-create.sh` |
 | Download a model manually | `hf download TinyLlama/TinyLlama-1.1B-Chat-v1.0 --local-dir models/TinyLlama` |
