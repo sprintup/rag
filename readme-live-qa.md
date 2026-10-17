@@ -104,6 +104,50 @@ GitHub repository, and that commit to be pushed; changes you haven't committed a
 
 ---
 
+## The session state
+
+Envie remembers nothing between questions by itself: each one is a separate request. Like a
+harness, the app keeps a small **session state** and sends it with every question, before the
+sources. It's shared by the whole class, kept in memory, and reset when the app restarts.
+
+**🧭 Session state** (top of the sidebar) opens it in a window:
+- **Current step:** choose the step the class is on. A question that mentions a step, e.g. *"We're
+  on step 4"*, also sets it.
+- **The learning objectives checklist:** all 19 objectives from the summary table in
+  [00_readme-learning-objectives.md](00_readme-learning-objectives.md), with a progress bar. Tick
+  them off as the class completes them; the line above the queue shows the step and how many are
+  done.
+- **What Envie is told:** the exact JSON sent with every question, so you can see this "hidden"
+  context, e.g.:
+  ```json
+  {
+   "current_step": "04 Harnesses",
+   "current_step_objectives": [
+    {"id": "04.1", "objective": "Distinguish @, / and # per harness", "done": true},
+    {"id": "04.2", "objective": "⚠ Compare context handling and orchestration", "done": false}
+   ],
+   "objectives_done": ["01.1", "01.2", "04.1"],
+   "objectives_total": 19,
+   "previous_exchange": {"question": "What is a skill?", "answer_start": "A skill is…"}
+  }
+  ```
+  It's kept short, about 200–300 tokens: only the current step's objectives are listed in full,
+  and only the start of the previous answer.
+- **Reset session state:** clears the step, the ticks and the previous exchange.
+
+**How Envie uses it:**
+- It ties answers to the current step's objectives, and steers back to them if a question drifts.
+- For a short or vague message (*"We're on step 4"*, *"tell me more"*, *"I'm lost"*), it gets that
+  step's section of the learning objectives and the readme passages about the **next objective not
+  yet ticked**, and teaches that one, ending with a question that checks it's understood.
+- When an objective seems understood, it suggests ticking it off. Objectives already ticked can
+  still be reviewed or clarified.
+- The **previous exchange** lets it follow up, e.g. *"tell me more"*; such follow-ups are also
+  searched together with the previous question.
+- Without a current step, it asks which step or learning objective the class is working on.
+
+---
+
 ## 1. Try it on your own computer first
 
 **Before you start:**
