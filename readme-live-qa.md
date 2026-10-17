@@ -22,10 +22,24 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
   read, so a `.env` or other secret file is never included.
 - **No uploads, no pickle.** The search index is built in memory once, when the first page loads,
   and nothing is saved to `vectorstore/`.
-- **Answers cite files and lines,** e.g. `[src/inference_server.py, lines 27-32]`. Each piece of
+- **Answers like a mentor.** Envie explains *why*, points out an assumption or a common mistake,
+  flags anything unsafe, and ends with one short question to think about. The style is adapted
+  from the [Mentor mode](https://awesome-copilot.github.com/agent/mentor/) agent
+  ([source file](https://github.com/github/awesome-copilot/blob/main/agents/mentor.agent.md) in
+  github/awesome-copilot, MIT License), shortened for a small model and for a live Q&A, where
+  people want an answer rather than only questions back.
+- **Only relevant context.** Each question gets up to 4 matching chunks of up to 800 characters,
+  plus a short description of the project. Chunks that hardly match are left out, so a greeting
+  like *"hello?"* gets a greeting back, not an answer built from unrelated text. A question that
+  names a file, e.g. *"What does inference_server.py do?"*, also gets the start of that file,
+  where files describe themselves.
+- **Answers cite files and lines,** e.g. `[src/inference_server.py, lines 1-12]`. Each piece of
   text Envie is given is labelled with its file and line numbers, and Qwen is asked to cite them.
   Under each answer, the app also lists the files and lines it gave Qwen (**From:** …), so the
   list is right even if Qwen forgets to cite one, and **Sources** shows their exact text.
+- **Made-up citations are flagged.** A small model sometimes cites lines or files it was never
+  given. The app checks every citation against the sources, and shows any that don't match under
+  the answer: *"⚠ Not in the sources Envie was given, so possibly made up"*.
 - **One chat for everyone,** updated every second in each browser.
 - **The queue:** each waiting question, shortened; **hover** over one to see all of it. The
   **presenter** can move questions up (**↑**) or down (**↓**), remove them (**✕**), **⏸ Pause**
@@ -139,7 +153,8 @@ through the questions one at a time, and you choose the order. While an answer a
 - **Never share the presenter key**, or the address with `?key=` in it, e.g. on a shared screen.
   Restarting the app makes a new key.
 - **Everyone sees every question.** Ask participants not to type names or personal details.
-- **Answers can be wrong.** Qwen reads only 4 short chunks per question; check the **Sources**.
+- **Answers can be wrong.** Qwen reads only a few short chunks per question, and can misread
+  them; check the **Sources**, and watch for the ⚠ made-up-citation warning.
 - **Ollama's port (11434) stays private.** Its API has no password, so the dev container never
   forwards it. Only ever make port **8501** public ([readme-safety.md](readme-safety.md),
   section 11).

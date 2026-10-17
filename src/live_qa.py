@@ -27,6 +27,7 @@ import html
 import itertools
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -128,31 +129,44 @@ if LLM_NAME not in models:
 
 @st.cache_resource(show_spinner="Indexing this project's files (once, when the app starts)...")
 def build_vectorstore():
-    # Short chunks keep the prompt short, and on a CPU a shorter prompt means a faster answer. This
-    # splitter cuts at blank lines first, then at line ends, so code is split into short chunks too.
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50, add_start_index=True)
+    # 4 chunks of up to 800 characters give Qwen enough to explain, while keeping the prompt short:
+    # on a CPU, every extra word in the prompt adds waiting time. This splitter cuts at blank lines
+    # first, then at line ends, so code is split into short chunks too.
+    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100, add_start_index=True)
     chunks = []
+    file_chunks = {}   # each file's chunks, in order
     for path in project_files():
         document = TextLoader(path, encoding="utf-8").load()[0]
-        for chunk in splitter.split_documents([document]):
+        file_chunks[path] = splitter.split_documents([document])
+        for chunk in file_chunks[path]:
             # Turn the chunk's position in the file into line numbers, so answers can cite them
             first = document.page_content.count("\n", 0, chunk.metadata["start_index"]) + 1
             chunk.metadata["lines"] = (first, first + chunk.page_content.count("\n"))
             chunks.append(chunk)
-    # Kept in memory and built once for everyone, so no pickle file is written or loaded
-    return FAISS.from_documents(chunks, HuggingFaceEmbeddings(model_name=EMBEDDING_DIR))
+    # Normalized embeddings make FAISS's relevance score a similarity from 0 to 1 (see build_prompt).
+    # Kept in memory and built once for everyone, so no pickle file is written or loaded.
+    embedder = HuggingFaceEmbeddings(model_name=EMBEDDING_DIR, encode_kwargs={"normalize_embeddings": True})
+    return FAISS.from_documents(chunks, embedder), file_chunks
 
-vectorstore = build_vectorstore()
+vectorstore, file_chunks = build_vectorstore()
+indexed_files = sorted(file_chunks)
 
 ############################################
 # Answering a question (the same steps as main.py)
 ############################################
 
-SYSTEM_PROMPT = ("You are a helpful AI assistant named Envie. You will reply to questions only based on the context "
-                 "that you are provided. If something is out of context, you will refrain from replying and politely "
-                 "decline to respond to the user. Each part of the context starts with its source in square brackets, "
-                 "e.g. [src/main.py, lines 100-107]. Whenever you use a part, cite its source in your answer, written "
-                 "exactly the same way.")
+# Envie answers like a mentor: the style is adapted from the "Mentor mode" agent in
+# github/awesome-copilot (agents/mentor.agent.md, MIT License), shortened for a small model, and for
+# a live Q&A where people want an answer rather than only questions back.
+SYSTEM_PROMPT = """You are Envie, a friendly mentor answering a class's questions about one software project, live during a presentation. The project shows how to run AI models locally and use them in VS Code: a RAG app, a local inference server, a VS Code extension, AI harnesses such as GitHub Copilot, Claude Code and Codex, MCP servers, agents and skills, and the safety rules for using them.
+
+How to answer:
+- Use only the context given with the question. Each part of it starts with its source in square brackets, e.g. [src/main.py, lines 100-107]. Cite the source of every fact you use, copying the whole bracket exactly, always including the file name, e.g. [src/main.py, lines 100-107], never just [100-107]. Never invent files, lines or facts.
+- Be clear and concise: at most about 120 words. Explain why, not just what.
+- Like a mentor, help people think: point out an assumption or a common mistake when there is one, and end with one short question that makes them think further.
+- If something in the question is unsafe, say so plainly and explain why.
+- If the context doesn't answer the question, say so in one sentence, and suggest a related question about the project.
+- If the message is only a greeting, greet back in one sentence and invite a question about the project."""
 
 def source_label(doc):
     # e.g. "src/main.py, lines 100-107"
@@ -160,14 +174,60 @@ def source_label(doc):
     lines = f"line {first}" if first == last else f"lines {first}-{last}"
     return f"{os.path.relpath(doc.metadata['source'], PROJECT_DIR).replace(os.sep, '/')}, {lines}"
 
+# Chunks less similar to the question than this are left out. Measured on this project: greetings
+# and off-topic messages ("hello?", "thanks!") score below 0.1, while real questions' best matches
+# score 0.3 and up. Without a cut-off, "hello?" would get 4 unrelated chunks and an odd answer.
+RELEVANCE_CUTOFF = 0.2
+
 def build_prompt(question):
-    # Retrieve the 4 most similar chunks, and put them above the question, each with its source
-    docs = vectorstore.as_retriever(search_kwargs={"k": 4}).invoke(question)
-    context = "".join(f"[{source_label(doc)}]\n{doc.page_content}\n\n" for doc in docs)
-    prompt = "Context:\n\n" + context + "Question: " + question + "\n"
-    # Keep exactly which chunks were given to the model, to show as sources
-    sources = [{"label": source_label(doc), "text": doc.page_content} for doc in docs]
+    # Retrieve the 4 most similar chunks, keeping only the ones that really match
+    docs = [doc for doc, score in vectorstore.similarity_search_with_relevance_scores(question, k=4)
+            if score >= RELEVANCE_CUTOFF]
+    # A question that names a file, e.g. "What does inference_server.py do?", also gets that file's
+    # opening chunk, where files describe themselves, and its best match: otherwise readmes that
+    # mention the file can crowd out the file itself
+    for path in indexed_files:
+        if os.path.basename(path).lower() in question.lower():
+            opening = [chunk for chunk in file_chunks[path] if chunk.metadata["lines"][0] == 1][:1]
+            for doc in opening + vectorstore.similarity_search(question, k=1, filter={"source": path}):
+                if doc not in docs:
+                    docs.insert(0, doc)
+    docs = docs[:5]
+    if docs:
+        context = "".join(f"[{source_label(doc)}]\n{doc.page_content}\n\n" for doc in docs)
+    else:
+        context = "(Nothing in the project matches this message.)\n\n"
+    # The citation rule is repeated after the question: small models follow the last instruction best
+    prompt = ("Context:\n\n" + context + "Question: " + question + "\n\n"
+              "Answer as Envie. Cite each fact with its source in square brackets, copied exactly from the "
+              "context, e.g. [src/main.py, lines 100-107]. Cite only sources given above.\n")
+    # Keep exactly which chunks were given to the model, to show as sources and check citations
+    sources = [{"label": source_label(doc), "text": doc.page_content,
+                "file": source_label(doc).rsplit(", line", 1)[0], "lines": doc.metadata["lines"]}
+               for doc in docs]
     return prompt, sources
+
+def unverified_citations(answer, sources):
+    # Citations in the answer, e.g. [src/main.py, lines 100-107], that don't fall inside a chunk the
+    # model was actually given, and project files it mentions without having been given them. A small
+    # model sometimes invents these; they're shown with a warning.
+    unverified = []
+    for match in re.finditer(r"\[([^\[\],]+),\s*lines?\s+(\d+)(?:\s*[-–]\s*(\d+))?\]", answer):
+        file, first = match.group(1).strip(), int(match.group(2))
+        last = int(match.group(3) or first)
+        if not any(source["file"] == file and source["lines"][0] <= first and last <= source["lines"][1]
+                   for source in sources):
+            unverified.append(match.group(0))
+    # A file name is fine if it's one of the sources, or mentioned in their text (e.g. "SKILL.md")
+    given = {os.path.basename(source["file"]) for source in sources}
+    given_text = "\n".join(source["text"] for source in sources)
+    for path in indexed_files:
+        name = os.path.basename(path)
+        if (re.search(rf"(?<![\w.-]){re.escape(name)}(?![\w-])", answer)
+                and name not in given and name not in given_text
+                and not any(name in citation for citation in unverified)):
+            unverified.append(name)
+    return list(dict.fromkeys(unverified))
 
 def stream_response(user_content):
     # The same OpenAI-style request the VS Code plugin sends; "stream" asks for the reply piece by
@@ -175,7 +235,7 @@ def stream_response(user_content):
     response = requests.post(f"{OLLAMA_URL}/v1/chat/completions", stream=True, timeout=600, json={
         "model": LLM_NAME,
         "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_content}],
-        "max_tokens": 400,
+        "max_tokens": 300,   # about 120 words are asked for; this is a safety limit
         "stream": True,
         # Qwen thinks before answering by default, which takes minutes on a CPU: answer straight away
         "reasoning_effort": "none",
@@ -318,6 +378,10 @@ def show_chat(live):
                 st.markdown(plain(message["answer"]) + "▌" if message["answer"] else "*Thinking…*")
             else:
                 st.markdown(plain(message["answer"]))
+                unverified = unverified_citations(message["answer"], message["sources"])
+                if unverified:
+                    st.caption("⚠ Not in the sources Envie was given, so possibly made up: "
+                               + " · ".join(plain(citation) for citation in unverified))
             if message["sources"]:
                 show_sources(message["sources"])
     if not messages and not current:
