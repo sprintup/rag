@@ -44,6 +44,8 @@ git switch --detach 378b56c
 - [ ] In that window: a **new chat**, session **Local**, mode **Ask**.
 - [ ] In your **main** VS Code window (not the test window, which has extensions turned off): the
       **Claude Code** and **Codex** extensions installed and signed in, so their tabs work in step 04.
+- [ ] For step 04's local Claude Code: Ollama running with `OLLAMA_CONTEXT_LENGTH` raised (e.g.
+      `32768`), and `ollama launch claude` tried once with `qwen3.5:4b`, so nothing installs live.
 
 After step 04, go back to the latest version **before** step 05:
 ```powershell
@@ -231,20 +233,32 @@ Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8) and
    Claude Code and Codex, `@` attaches a file, `#` means nothing, and Codex uses `$` for skills.
    Copilot, Claude Code and Codex are three separate harnesses from three companies, each reading
    its own folders.
-2. **Compare** how harnesses handle context: who keeps the history (sessions, and where they're
-   saved), what happens when the context window fills up, which **utility models** see the
-   conversation, which tools are offered, and ⚠ each harness's own permission settings.
-3. **Explain** which harnesses can run on a **local model**, and what **hidden context** each one
-   sends with every message (system prompt, tools, instruction files, skills list, environment),
-   ⚠ which goes wherever the model runs, local or cloud.
+2. **Compare** how harnesses handle context and **orchestrate agents**: who keeps the history
+   (sessions, and where they're saved), what happens when the context window fills up, which
+   **utility models** see the conversation, which tools are offered, ⚠ each harness's own
+   permission settings, and how agents work together in each: **handoffs** (Copilot only,
+   `handoffs:` in `.agent.md`), **subagents** (all three) and **teams** (experimental in Claude
+   Code and Codex). Handoffs don't carry over between harnesses.
+3. **Explain** how each harness can run a **local model** like Qwen. Each harness is a program on
+   your computer, separate from the model: Claude Code's
+   `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-<platform>\resources\native-binary\claude.exe`,
+   Codex's `%USERPROFILE%\.vscode\extensions\openai.chatgpt-<version>-<platform>\bin\<platform>\codex.exe`,
+   and, for Copilot, a Node.js package inside VS Code's built-in Copilot extension. The **VS Code
+   tab is a front end for the CLI**: it starts that program and passes messages to it as JSON, so
+   the CLI and the tab connect to a local model the same way (Claude Code: `ollama launch claude`
+   or `ANTHROPIC_BASE_URL`; Codex: `codex --oss` or `config.toml`; Copilot: the model picker, or
+   `ollama launch copilot` for the CLI). ⚠ Each harness also sends **hidden context** with every
+   message (system prompt, tools, instruction files, skills list, environment), which goes
+   wherever the model runs, local or cloud.
 
 **Demonstration:**
 | Time | What you do | What to point out |
 |---|---|---|
 | 2 min | In the Extension Development Host (commit `378b56c`): Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` | `@` = who answers, `/` = what to do: our plugin adds `@tinyllama`, VS Code's harness finds `/pirate` in `.github/skills/`. |
 | 2 min | In your **main** VS Code window, type `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs. Show the operators table (04, section 7). | The same keys mean different things in each tab: `@` is a participant in one and a file in the others. `/pirate` only appears in the Chat tab, because only Copilot reads `.github/skills/`. Three harnesses, three sets of folders. |
-| 3 min | Side by side: `@tinyllama` in the Chat view (left) and **TinyLlama: Open Chat** (right). Ask both *"What was my first message?"*, then **New Session** / **Clear** and ask again. Show the **Sessions** list. | The model remembers nothing: each program keeps the history and resends it. VS Code saves sessions to disk; our panel only in memory. The session title came from a **utility model**. Show the context table (readme-sessions, section 2). |
-| 3 min | Attach `readme.md` and ask `@tinyllama summarize this`; point at the server log's prompt size. Then show the hidden-context table (04, section 8). | Our plugin sends a few hundred tokens; Copilot's Agent mode about 9,000 for "Hello?", most of it hidden. ⚠ With a cloud model, all of it (instructions, skills list, attached files) leaves your computer. All three harnesses can use a local model through Ollama (`ollama launch claude`, `codex --oss`). |
+| 3 min | Side by side: `@tinyllama` in the Chat view (left) and **TinyLlama: Open Chat** (right). Ask both *"What was my first message?"*, then **New Session** / **Clear** and ask again. Show the **Sessions** list. | The model remembers nothing: each program keeps the history and resends it. VS Code saves sessions to disk; our panel only in memory. The session title came from a **utility model**. Show the context table (readme-sessions, section 2), then the orchestration table (04, section 7): handoffs are Copilot-only buttons; all three have subagents. |
+| 3 min | Show the program behind the Claude Code tab: `claude.exe` in the extension's `resources
+ative-binary\` folder. In a terminal, run `ollama launch claude` and choose `qwen3.5:4b`; press **Shift+Tab** out of auto mode. Then show the hidden-context table (04, section 8). | The tab is a front end for the CLI: the same program, so the same way to connect a local model. Claude Code now runs on your GPU, and warns it doesn't know Qwen's context size. Its hidden prompt is large; Copilot's is about 9,000 tokens for "Hello?". ⚠ With a cloud model, all of it (instructions, skills list, attached files) leaves your computer. |
 | 2 min | ⚠ Open `.github/skills/pirate/SKILL.md` raw, and name each harness's permission setting: **Configure Tools**, Claude Code's permission modes, Codex's `sandbox_mode`. | A skill is Markdown the model obeys, and it's sent with every request. Each harness has its own lock: turning tools off in one doesn't restrict the others. |
 
 **Prepare beforehand:** the Extension Development Host on commit `378b56c` with the inference
@@ -319,7 +333,7 @@ changes daily.
 | 01 Setup | 10 | Describe training vs. inference · Explain what Ollama abstracts away · ⚠ Explain a model's supply chain and bias |
 | 02 RAG | 10 | Describe the RAG steps · Explain sources · Demonstrate local inference |
 | 03 Serving inference | 8 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
-| 04 Harnesses | 12 | Distinguish @, / and # per harness · ⚠ Compare how harnesses handle context · ⚠ Explain local models and hidden context |
+| 04 Harnesses | 12 | Distinguish @, / and # per harness · ⚠ Compare context handling and orchestration · ⚠ Explain local models, CLI vs. tab, and hidden context |
 | 05 Models | 10 | Compare models by version, size and origin · Explain tool conditions · ⚠ Explain tools off by default |
 | 06 MCP and agents | 10 | Describe MCP · Distinguish instruction files · ⚠ Describe injections in public `.md` files |
 | **Total** | **60** | 18 objectives |

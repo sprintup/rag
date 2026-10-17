@@ -266,6 +266,7 @@ folder (`%USERPROFILE%`); the other paths are in the workspace.
 | **Instructions for some files only** | `.github/instructions/*.instructions.md` (`applyTo`), `.claude/rules/`, `~/.copilot/instructions/` | `.claude/rules/` | `AGENTS.md` in a subfolder |
 | **[Skills](https://agentskills.io/specification)** (`SKILL.md`; open standard from Anthropic) | `.github/skills/`, `.claude/skills/`, `.agents/skills/`; in `~`: `~/.copilot/skills/`, `~/.claude/skills/`, `~/.agents/skills/` | `.claude/skills/`, `~/.claude/skills/` | `.agents/skills/`, `~/.codex/skills/` |
 | **Custom agents** | `.github/agents/*.agent.md`, `.claude/agents/`, `~/.copilot/agents/` | `.claude/agents/` (subagents) | `.codex/agents/` |
+| **Orchestration** (see below) | Handoffs (`handoffs:` in `.agent.md`), subagents (`runSubagent`) | Subagents, experimental agent teams | Subagents (`spawn_agent`), multi-agent threads |
 | **Reusable prompts** (`/name`) | `.github/prompts/*.prompt.md` | `.claude/commands/*.md`, or skills | Skills |
 | **[MCP](https://modelcontextprotocol.io/specification/latest) servers** (from Anthropic, now the Agentic AI Foundation) | `.vscode/mcp.json` | `.mcp.json`, `~/.claude.json` | `[mcp_servers]` in `~/.codex/config.toml` |
 | **Hooks** | `.github/hooks/`, `~/.copilot/hooks/` | `hooks` in `.claude/settings.json` | `.codex/hooks.json` |
@@ -312,6 +313,46 @@ So `@tinyllama` only works in the Chat tab, because only VS Code's harness has c
 and `/pirate` only lists skills that harness reads (see the table above). Where the `/` commands
 in the Chat view come from is explained in section 7 of [readme-context.md](readme-context.md).
 
+### Orchestration: handoffs, subagents and teams
+
+Agents can work together in three ways:
+- **Handoff:** switch to another agent in the **same** chat, and the conversation goes with it.
+  It's sequential, and usually started by you, e.g. Plan → Implement.
+- **Subagent:** the main agent delegates a task to another agent with its **own, fresh** context
+  window. The subagent works alone and sends back only a summary, which keeps the main conversation
+  short.
+- **Team:** several agents work **in parallel** and message each other, with one as the leader.
+
+| | Copilot (Chat tab) | Claude Code | Codex |
+|---|---|---|---|
+| **Handoffs** | Yes: a `handoffs:` list in a `.agent.md` file shows buttons after a reply, which switch to the next agent with a prepared prompt | No | No user-facing handoffs |
+| **Subagents** | Yes: the `runSubagent` tool, which an agent can use to delegate | Yes: agents in `.claude/agents/`, started by the main agent through its Agent tool | Yes: `spawn_agent`, limited by settings such as `agents.max_concurrent_threads_per_session` |
+| **Teams** | Not found | Experimental "agent teams": a team leader and teammates, turned on with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` | A `multi_agent_v2` feature: several threads per session |
+| **Where agents are defined** | `.github/agents/*.agent.md`; also reads `.claude/agents/` | `.claude/agents/*.md` | `.codex/agents/` |
+
+**Handoffs only work in Copilot.** `handoffs:` is a field in VS Code's `.agent.md` format, and the
+buttons are part of VS Code's Chat view. Claude Code reads its own folder with its own fields, and
+Codex has no buttons for it. Copilot does read `.claude/agents/`, so one agent file can be shared,
+but a handoff in it only works in Copilot. This project's **Idea Generator** agent
+([06_readme-mcp-agents.md](06_readme-mcp-agents.md)) uses no handoffs: it's a single agent with
+only the `fetch` tool.
+
+**Orchestrating across harnesses** isn't built into any of them. The usual workarounds:
+- **Hand over through files:** one agent writes `plan.md`, and you open another harness and ask it
+  to "implement `plan.md`". This is simple, visible and works everywhere.
+- **One harness as another's tool:** Claude Code can run as an MCP server (`claude mcp serve`), so
+  another harness can call it like any MCP tool.
+- **Your own harness on top**, calling each one as a step
+  ([readme-custom-harness.md](readme-custom-harness.md)).
+
+**⚠ Security:** each subagent or teammate is another model with tools, and an agent file can give
+its subagents tools you didn't approve for the main agent. Check the `tools:` list of **every**
+agent file involved, not just the one you started. Handoff prompts and agent files from public
+collections are instructions the model obeys, just like skills.
+
+> Found by searching the installed programs (VS Code 1.142, Claude Code 2.1.301, Codex extension
+> 26.1007), not by running them. Teams in Claude Code and Codex are experimental.
+
 ### Is there a "harness API"?
 
 Not a single one. There are a few layers:
@@ -353,18 +394,151 @@ and, since recent versions, Anthropic-style ones (`/v1/messages`), and its `olla
 starts several harnesses already pointed at it. On this computer (Ollama 0.40.4), `ollama launch`
 lists `claude` (Claude Code), `codex` (Codex) and `copilot` (Copilot CLI), among others.
 
-| Harness | Local model? | How | Tried here |
+**Harnesses don't serve models; they connect to a server that does.** Ollama (or Foundry Local, or
+our `inference_server.py`) loads Qwen and answers requests. Each harness only needs that server to
+speak the request format it was built for:
+
+| Harness | Request format it sends | Served by Ollama? |
+|---|---|---|
+| Copilot | Through the model provider extension, which talks to Ollama | Yes |
+| Claude Code | Anthropic's Messages API (`/v1/messages`) | Yes, since recent versions (answered here) |
+| Codex | OpenAI's API | Yes |
+| Our plugin | OpenAI's Chat Completions API (`/v1/chat/completions`) | Yes, and by `inference_server.py` |
+
+So one Qwen running in Ollama can serve all of them; requests that arrive together may wait their
+turn on a single GPU.
+
+### CLI harness vs. extension harness
+
+Each company offers its harness in two places: a **CLI** (command-line program) that runs in a
+terminal, and a **VS Code extension** that shows it in a tab.
+
+| | Command-line version (CLI) | VS Code version (extension) | Same harness? |
 |---|---|---|---|
-| **Copilot** (Chat tab, **Local** session) | Yes | Ollama's VS Code extension adds its models to the model picker ([05_readme-models.md](05_readme-models.md)) | Yes: Qwen 3.5, in Ask and Agent mode |
-| **Copilot CLI** | Yes | `ollama launch copilot` | No |
-| **Claude Code** | Yes | In a terminal: `ollama launch claude`. In the tab: set `ANTHROPIC_BASE_URL` to `http://localhost:11434` in the `claudeCode.environmentVariables` setting, or under `"env"` in `.claude/settings.json` | Ollama answered an Anthropic-style request from Qwen; Claude Code itself not tried |
-| **Codex** | Yes | In a terminal: `codex --oss` (Ollama or LM Studio), or `ollama launch codex`. The tab runs the Codex CLI, so it uses the same `~/.codex/config.toml` | No |
-| **Our plugin** (`@tinyllama`, the TinyLlama chat) | Always | `tinyllama.serverUrl` | Yes: TinyLlama and Qwen |
+| **Claude Code** | `claude`, in any terminal | The **Claude Code** tab. It runs its own copy of the same program, `claude.exe`. | **Yes.** Same program, same settings (`~/.claude/`, `.claude/`), same session files. Only the window differs. |
+| **Codex** | `codex`, in any terminal (installed with npm) | The **Codex** tab. It runs its own copy of the Codex CLI, `codex.exe`. | **Yes.** Same program, same settings (`~/.codex/config.toml`), same session files. |
+| **GitHub Copilot** | **Copilot CLI**, `copilot` (installed with npm) | The **Chat** tab, with a **Local** session | **No.** The Chat tab's Local session is VS Code's own harness, with the model picker. Copilot CLI is GitHub's agent runtime (the Copilot SDK), which VS Code's **Copilot** session type also uses. |
+
+**Where each harness's program is.** The harness is a program on your computer; the model is
+separate (in Ollama, or in the vendor's cloud). `<version>` changes with each update, and
+`<VS Code folder>` is the short code folder inside VS Code's install folder, e.g.
+`%LOCALAPPDATA%\Programs\Microsoft VS Code\<VS Code folder>\`:
+
+| Harness | Program used by the VS Code tab | Program used in a terminal |
+|---|---|---|
+| **Claude Code** | `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<version>-win32-x64\resources\native-binary\claude.exe` | `%USERPROFILE%\.local\bin\claude.exe` (the standalone install) |
+| **Codex** | `%USERPROFILE%\.vscode\extensions\openai.chatgpt-<version>-win32-x64\bin\windows-x86_64\codex.exe` | `%APPDATA%\npm\codex` (from `npm install -g @openai/codex`) |
+| **GitHub Copilot** | No `.exe`: VS Code's built-in Copilot extension, with the agent runtime as a Node.js package: `%LOCALAPPDATA%\Programs\Microsoft VS Code\<VS Code folder>\resources\app\extensions\copilot\node_modules\@github\copilot\` | `copilot` from `npm install -g @github/copilot`. VS Code's terminal also gets a `copilot` command, `%APPDATA%\Code\User\globalStorage\github.copilot-chat\copilotCli\copilot.bat`, which finds the real one or offers to install it. |
+
+**The tab is a front end for the CLI.** For Claude Code and Codex, the extension mostly draws the
+tab, starts the bundled program, and passes messages to it and back:
+- The Claude Code tab starts `claude.exe` with `--input-format stream-json --output-format
+  stream-json`: your messages go in, and replies, tool calls and approvals come out, as JSON lines.
+- The Codex tab starts `codex.exe app-server` and exchanges JSON lines with it the same way.
+
+The agent loop, tools, permissions, context handling and model connection are all in the program,
+not in the extension. That's why the CLI and the tab behave the same, and why connecting a local
+model works the same way for both. Copilot is built differently: the Chat tab's harness is part of
+VS Code itself, and only the **Copilot** session type and the Copilot CLI use GitHub's separate
+runtime.
+
+**Why this matters for local models:** for Claude Code and Codex, connecting a local model is the
+**same setting** for the CLI and the tab, because they're the same program. What differs is **how
+far the setting reaches**: an environment variable in one terminal affects only that terminal,
+while a settings file can affect every tab and terminal on the computer. For Copilot, the two are
+different harnesses, connected in different ways.
+
+### Connecting Qwen to each one
+
+**First, for all of them:**
+1. Ollama running, with the model pulled: `ollama pull qwen3.5:4b`.
+2. A context window big enough for the harness's hidden prompt and tools (see "The hidden context"
+   below). The harnesses send far more than our plugin does, so raise it, then quit and restart
+   Ollama:
+   ```powershell
+   setx OLLAMA_CONTEXT_LENGTH 32768
+   ```
+   Check that `ollama ps` still shows `100% GPU`: a bigger window needs more GPU memory.
+3. **Turn automatic approval off.** A small local model makes more mistakes, so let it ask before
+   every tool call (rule 1 of [readme-safety.md](readme-safety.md)).
+
+#### GitHub Copilot
+
+| | How to connect Qwen | Tried here |
+|---|---|---|
+| **Extension** (Chat tab) | Install the **Ollama** extension, add `qwen3.5:4b` in the model picker (**Manage Models…**), and choose it in a **Local** session. Full steps: [05_readme-models.md](05_readme-models.md). Also set the utility model settings, so background jobs stay local ([readme-safety.md](readme-safety.md), section 5). | **Yes**, in Ask and Agent mode |
+| **CLI** (Copilot CLI) | Install it (`npm install -g @github/copilot`), then run `ollama launch copilot`, which starts it already connected to Ollama. | No |
+
+#### Claude Code
+
+| | How to connect Qwen | Tried here |
+|---|---|---|
+| **CLI** | `ollama launch claude`, then choose `qwen3.5:4b`. It starts `claude --model qwen3.5:4b` with the connection set for that one process only, so other Claude Code windows are unaffected. | **Yes**: it started on Qwen |
+| **Extension** (Claude Code tab) | Give the tab the same connection through environment variables. Put them in **a separate demo folder's** `.claude/settings.local.json`, so only sessions opened in that folder use Qwen (example below). | No |
+
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:11434",
+    "ANTHROPIC_AUTH_TOKEN": "ollama",
+    "ANTHROPIC_MODEL": "qwen3.5:4b",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "qwen3.5:4b"
+  }
+}
+```
+- `ANTHROPIC_BASE_URL` sends requests to Ollama instead of Anthropic. `ANTHROPIC_AUTH_TOKEN` can
+  be any text; Ollama doesn't check it.
+- `ANTHROPIC_DEFAULT_HAIKU_MODEL` points Claude Code's **background model** at Qwen too, so
+  background jobs don't fail or go to the cloud.
+- The extension also has a `claudeCode.environmentVariables` setting, but it's a **machine-wide**
+  setting: it would switch **every** Claude Code tab on the computer to Qwen. Prefer the folder
+  file.
+- These are the usual variable names, but they're not confirmed against what `ollama launch`
+  sets. Try them in a separate folder first.
+
+**What we saw** when starting the CLI on Qwen:
+- *"Model "qwen3.5:4b" isn't recognized · context assumed to be 200k tokens"*. Claude Code doesn't
+  know Qwen, so it assumes a 200,000-token window. Ollama gives Qwen only what
+  `OLLAMA_CONTEXT_LENGTH` allows, and silently cuts anything longer, so raise it (step 2 above).
+- *"auto mode on"*: Claude Code approves tool calls by itself when it judges them low risk, with a
+  4B model doing the judging. Press **Shift+Tab** to switch to the default mode, which asks
+  first, or to **plan** mode, which only plans.
+
+#### Codex
+
+| | How to connect Qwen | Tried here |
+|---|---|---|
+| **CLI** | `codex --oss -m qwen3.5:4b` (`--oss` means a local provider; add `--local-provider ollama` or `lmstudio` to choose one), or `ollama launch codex`. Only that run uses Qwen. | No |
+| **Extension** (Codex tab) | The tab reads `config.toml`. Setting the model there switches the tab, and every `codex` run on the computer (example below). | No |
+
+```toml
+# ~/.codex/config.toml: used by the Codex tab and every codex command
+model_provider = "ollama"
+model = "qwen3.5:4b"
+```
+- To keep your normal setup for everyday use, put these lines in a **profile** instead, e.g. under
+  `[profiles.local]`, and run `codex --profile local` in a terminal. The tab uses the top-level
+  values, though, so a profile only helps the CLI.
+- Codex can also read a project's own `.codex/config.toml` in a folder you've marked as trusted.
+  That would be the way to limit the tab to one demo folder; not tried here.
+
+#### Our plugin
+
+`tinyllama.serverUrl` and `tinyllama.model` ([05_readme-models.md](05_readme-models.md)). It's
+always local, and has no tools or background jobs.
+
+### What to expect
+
+| Harness | CLI on Qwen | Extension on Qwen |
+|---|---|---|
+| GitHub Copilot | Possible (`ollama launch copilot`); not tried | **Tried: works** (Local session) |
+| Claude Code | **Tried: starts** (`ollama launch claude`) | Possible (folder settings); not tried |
+| Codex | Possible (`codex --oss`); not tried | Possible (`config.toml`); not tried |
 
 **A harness written for big cloud models doesn't automatically work well with a small one.** Its
-hidden instructions and tool list must fit the local model's context window (see
-`OLLAMA_CONTEXT_LENGTH` in [05_readme-models.md](05_readme-models.md)), and the model must be good
-at calling tools. Expect a 4B model to struggle with long agent tasks in any of them.
+hidden instructions and tool list must fit the local model's context window, and the model must be
+good at calling tools. Expect a 4B model to be slow, and to struggle with long agent tasks in any
+of them.
 
 Some harnesses also use a **second, smaller model** for background jobs (section 2 of
 [readme-sessions.md](readme-sessions.md)). Point that one at the local server too, or those jobs
