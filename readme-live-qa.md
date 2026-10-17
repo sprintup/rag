@@ -28,33 +28,51 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
   ([source file](https://github.com/github/awesome-copilot/blob/main/agents/mentor.agent.md) in
   github/awesome-copilot, MIT License), shortened for a small model and for a live Q&A, where
   people want an answer rather than only questions back.
-- **Only relevant context.** Each question gets up to 4 matching chunks of up to 800 characters,
-  plus a short description of the project. Chunks that hardly match are left out, so a greeting
+- **Tables stay whole.** Each Markdown table is its own source, so it isn't cut in half; a long
+  table is split between rows, with its header row repeated in each piece. Tables are searched as
+  sentences (e.g. *"Context window: TinyLlama 1.1B 2,048 tokens; Qwen 2.5 32,768 tokens."*), which
+  the search model matches much better than rows of `|`, but Envie gets the table itself. Each
+  question can get up to 2 matching tables, since they summarize a lot in little space.
+- **Every readme passage says where it is,** e.g. *"(Section: Using a Different Local Model > Where
+  the models come from)"*, which helps both search and Envie.
+- **Only relevant context.** Each question gets up to 6 sources: the 3 most similar passages, up to
+  2 tables, and the best keyword matches in the code and readmes, plus a short description of the
+  project. Chunks that hardly match are left out, so a greeting
   like *"hello?"* gets a greeting back, not an answer built from unrelated text. A question that
   names a file, e.g. *"What does inference_server.py do?"*, also gets the start of that file,
   where files describe themselves.
-- **Answers cite files and lines,** e.g. `[src/inference_server.py, lines 1-12]`. Each piece of
-  text Envie is given is labelled with its file and line numbers, and Qwen is asked to cite them.
-  Under each answer, the app also lists the files and lines it gave Qwen (**From:** …), so the
-  list is right even if Qwen forgets to cite one, and **Sources** shows their exact text.
-- **Made-up citations are flagged.** A small model sometimes cites lines or files it was never
-  given. The app checks every citation against the sources, and shows any that don't match under
-  the answer: *"⚠ Not in the sources Envie was given, so possibly made up"*.
+- **Answers cite their sources by number,** e.g. *"…streams the reply piece by piece [4]"*. Each
+  `[4]` is a link to those lines of the file on GitHub. Under the answer, a numbered list shows
+  what each number is, e.g. **[4] src/live_qa.py, lines 539-551**, and **Sources** shows their text.
+  The sources are numbered in the prompt, so Qwen only has to write `[4]`, which a small model gets
+  right far more often than copying a file name and lines. The list is made by the app, so it's
+  right even if Qwen forgets a citation.
+- **Code is labelled,** e.g. *"(Code: src/live_qa.py, in function stream_response)"*, so questions
+  about how something works also find the code that does it.
+- **Questions about Envie itself,** e.g. *"How do you work?"*, always get the start of
+  `src/live_qa.py` and of this guide, where the app describes itself.
+- **Images are sources too.** Every image a readme shows, e.g. the learning-steps diagram, is
+  indexed through a description: its alt text, the paragraphs around it, and, for a draw.io
+  diagram exported as `<name>.drawio.png`, all the text in the `.drawio` file. When Envie uses an
+  image, it cites it as `[docs/images/learning-steps.drawio.png]`, and the app shows the image
+  with the answer and links to it on GitHub. A readme passage that shows an image also brings the
+  image along as a source. To add an image, put it in a readme with `![description](path)`, with a
+  good description; a new `.drawio.png` gets its diagram text automatically.
+- **Made-up citations are flagged.** A small model sometimes cites a source number it wasn't
+  given, e.g. `[7]` when there are 5 sources, or a file that isn't a source, e.g.
+  `[docs/notes.md]`. The app checks every citation, and shows any that don't match under the
+  answer: *"⚠ Not in the sources Envie was given, so possibly made up"*.
 - **One chat for everyone,** updated every second in each browser.
-- **The queue:** each waiting question, shortened; **hover** over one to see all of it. The
-  **presenter** can move questions up (**↑**) or down (**↓**), remove them (**✕**), **⏸ Pause**
-  answering and **🗑 Clear chat**. Everyone else can only ask.
-- **Limits:** questions up to 300 characters; at most 2 waiting per person and 30 in total.
-- **Plain text only:** questions and answers are shown exactly as typed, so nobody can put links,
-  images or formatting on everyone's screen.
+- **The queue:** each waiting question, shortened; **hover** over one to see all of it. Move
+  questions up (**↑**) or down (**↓**), remove them (**✕**), **⏸ Pause** answering, and
+  **🗑 Clear chat**. There's one view: everyone who opens the app has the same controls.
+- **Limits:** questions up to 300 characters, and up to 30 waiting.
+- **Shown as typed:** questions and answers can't put links, images or HTML on everyone's screen.
+  The only formatting is Envie's `code` and **bold**, and the only links are the citations, which
+  the app builds itself.
 
-**The presenter link.** Each time the app starts, it makes a new random key, and prints two links
-in the terminal (after the first page load): the **presenter link**, which ends in
-`?key=<that key>` and shows the queue controls, and the **participant link**, without the key, to
-share. Without the key, you only see the queue, with no buttons.
-
-**Citations are links.** Each citation that matches a source, and each **From:** entry, opens
-those lines of the file on GitHub in a new tab, at the commit the app is running from (e.g.
+**Citations are links.** Each numbered citation, and each entry in the numbered list under the
+answer, opens those lines of the file on GitHub in a new tab, at the commit the app is running from (e.g.
 `.../blob/<commit>/src/inference_server.py#L1-L12`). GitHub scrolls to the lines and highlights
 them. Markdown files open as text (`?plain=1`), because line links don't work on GitHub's
 formatted view of them. The **Sources** dropdown shows only the first 3 lines of each source; the
@@ -80,24 +98,17 @@ GitHub repository, and that commit to be pushed; changes you haven't committed a
    `--server.address 127.0.0.1` keeps the app reachable only from your computer. Without it,
    Streamlit also listens on your network, so others on the same Wi-Fi could open it.
 2. A browser tab opens at <http://localhost:8501>. The first load reads and indexes the project,
-   which takes a minute or so. The terminal then shows:
-   ```
-     Presenter link (queue controls; don't share it): http://localhost:8501/?key=Xq3v9Lk2Tm0
-     Participant link (share this one):                http://localhost:8501
-   ```
-3. **As the presenter:** open the presenter link (`Ctrl`+click it in the terminal). The sidebar
-   shows the **Pause** and **Clear chat** buttons, and ↑ ↓ ✕ next to each question.
-4. **As a participant:** open <http://localhost:8501> in a **private window** (`Ctrl+Shift+N` in
-   Edge or Chrome), so it counts as a different person. It shows the queue without controls.
-5. **Test it:**
-   - Ask a few questions from the participant window, e.g. *"What is a skill?"*, *"What does
-     inference_server.py do?"*, *"What are the three safety rules?"*. Both windows show them in
-     the queue, and the answers appear in both.
-   - In the presenter window, **Pause**, reorder with ↑ / ↓, remove one with ✕, and **Resume**.
-   - Hover over a long question in the queue to see all of it.
-   - Ask a third question from the participant window while two are waiting: it's refused
-     (*"You already have questions waiting"*).
-6. Stop the app with `Ctrl+C` in the terminal.
+   which takes a minute or so.
+3. Open the same address in a **private window** (`Ctrl+Shift+N` in Edge or Chrome) too, so it
+   counts as a second person.
+4. **Test it:**
+   - **Pause** first, so questions wait in the queue. Then ask a few from both windows, e.g.
+     *"What is a skill?"*, *"What does inference_server.py do?"*, *"What are the three safety
+     rules?"*. Both windows show them in the queue.
+   - Reorder with ↑ / ↓, remove one with ✕, and hover over a long question to see all of it. Both
+     windows show the change.
+   - **Resume**: the answers appear in both windows, one at a time.
+5. Stop the app with `Ctrl+C` in the terminal.
 
 ---
 
@@ -124,24 +135,19 @@ counts against **your** account's free monthly Codespaces hours (then billing).
    ```bash
    streamlit run src/live_qa.py
    ```
-2. **Open it once,** at the address Codespaces opens for port 8501:
-   `https://<your-codespace-name>-8501.app.github.dev`. The first load indexes the project; then
-   the terminal shows the **presenter link** and the **participant link**, with your codespace's
-   address already filled in.
-3. **Open the presenter link** (`Ctrl`+click it in the terminal). It looks like:
+2. **Open it,** at the address Codespaces opens for port 8501, which the terminal also prints:
    ```
-   https://<your-codespace-name>-8501.app.github.dev/?key=<your presenter key>
+     Live Q&A address (share this one): https://<your-codespace-name>-8501.app.github.dev
    ```
-   Check that **⏸ Pause** and **🗑 Clear chat** appear above the queue; if they don't, the page
-   was opened without the key.
-4. **Share it with the class.** In VS Code's **Ports** panel, right-click port **8501** →
-   **Port Visibility** → **Public**. Share the address **without** `?key=…`, e.g. as a link or a
-   QR code.
+   The first load indexes the project, which takes a minute or two on the CPU.
+3. **Share it with the class.** In VS Code's **Ports** panel, right-click port **8501** →
+   **Port Visibility** → **Public**, and share the address, e.g. as a link or a QR code.
 
 ### During the talk
 
 Participants type questions at the bottom of the page. Use **Pause** to look over the queue
 before Envie answers, **✕** to remove anything unsuitable, and **↑** / **↓** to choose the order.
+Everyone has these controls, so agree with the class that the presenter runs the queue.
 **A codespace has no GPU, so Qwen runs on the CPU:** expect a few words per second, and a minute
 or more per answer. That's what the queue is for: everyone can keep asking while Envie works
 through the questions one at a time, and you choose the order. While an answer appears, open
@@ -162,8 +168,8 @@ through the questions one at a time, and you choose the order. While an answer a
 - **A public port means anyone with the link can use the app** and see the chat, not just the
   class. There are no uploads and the input is limited, but make it public only during the
   session, and private again straight after.
-- **Never share the presenter key**, or the address with `?key=` in it, e.g. on a shared screen.
-  Restarting the app makes a new key.
+- **Anyone with the link can also manage the queue:** pause, reorder, remove questions and clear
+  the chat. That keeps the app simple; if it's misused, stop the app and restart it.
 - **Everyone sees every question.** Ask participants not to type names or personal details.
 - **Answers can be wrong.** Qwen reads only a few short chunks per question, and can misread
   them; check the **Sources**, and watch for the ⚠ made-up-citation warning.
@@ -180,8 +186,7 @@ More: [readme-safety.md](readme-safety.md).
 
 | Problem | Fix |
 |---|---|
-| No presenter link in the terminal | The links appear after the **first page load**. Open the app once, then look again. |
-| The queue shows questions but no ↑ ↓ ✕, **Pause** or **Clear chat** | The page was opened without the presenter key, with a wrong key, or with one from before the app was restarted. Open the latest **presenter link** from the terminal. |
+| No address in the terminal | It's printed after the **first page load**. Open the app once, then look again. |
 | *"Bad message format: Bad 'setIn' index"* | A known problem with the experimental live updates in Streamlit 1.35, when the page reloads while it's redrawing. Close the message and reload the page. |
 | "Not Found" in Codespaces | Check that the address has `-8501.app` in it. |
 | Participants can't open the address | Port 8501 is still **Private**. Set it to **Public** in the Ports panel. |
