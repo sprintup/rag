@@ -39,7 +39,8 @@
 			"extensions": ["ms-python.python"]
 		},
 		"codespaces": {
-			"openFiles": ["02_readme-rag-user-guide.md"]
+			// Opened when a codespace starts: the guide for running the live Q&A
+			"openFiles": ["readme-live-qa.md"]
 		}
 	}
 }
