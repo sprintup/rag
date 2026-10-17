@@ -13,13 +13,25 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
 
 ## What it does
 
-- **Answers from this project's files.** When it starts, it reads every `.md` and `.py` file in the
-  project folder and its subfolders, e.g. all the readmes, the skills, agents and instructions in
-  `.github/`, and the code in `src/`. New or changed files are picked up the next time the app
-  starts; there's nothing to copy or upload.
+- **Guides people through the learning objectives.** Envie's main purpose is to bring the class
+  through the six steps in [00_readme-learning-objectives.md](00_readme-learning-objectives.md). It
+  says which step an answer belongs to, and when someone seems lost (*"I'm lost"*, *"Where do I
+  start?"*) or a question is too vague, it shows the steps from the objectives' summary table and
+  asks which step or learning objective they're working on.
+- **Answers from this project's files.** When it starts, it reads every `.md`, `.py`, `.js`,
+  `.json`, `.sh`, `.yml` and `.yaml` file in the project folder and its subfolders, e.g. all the
+  readmes, the skills, agents and instructions in `.github/`, the Python code in `src/`, the VS Code
+  extension's `extension.js` and `package.json`, and the dev container's `devcontainer.json` and
+  `post-create.sh`, so it can explain how the codespace is set up and run. Files that don't say
+  what they're for, such as `package.json` or `post-create.sh`, are labelled with a short
+  description. New or changed files are picked up the next time the app
+  starts; there's nothing to copy or upload. A small JSON file such as `package.json` is given to
+  Envie whole, since its parts only make sense together (e.g. the settings are far below the
+  extension's name).
 - **Skips what isn't the project:** virtual environments (`venv_rag/`), `models/`, `vectorstore/`,
-  `uploaded_docs/`, caches, and hidden folders other than `.github/`. Only `.md` and `.py` files are
-  read, so a `.env` or other secret file is never included.
+  `uploaded_docs/`, caches, and hidden folders other than `.github/` and `.devcontainer/` (so
+  `.vscode/` isn't read). Only the file types above are read, so a `.env` or other secret file is
+  never included.
 - **No uploads, no pickle.** The search index is built in memory once, when the first page loads,
   and nothing is saved to `vectorstore/`.
 - **Answers like a mentor.** Envie explains *why*, points out an assumption or a common mistake,
@@ -47,8 +59,19 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
   The sources are numbered in the prompt, so Qwen only has to write `[4]`, which a small model gets
   right far more often than copying a file name and lines. The list is made by the app, so it's
   right even if Qwen forgets a citation.
-- **Code is labelled,** e.g. *"(Code: src/live_qa.py, in function stream_response)"*, so questions
-  about how something works also find the code that does it.
+- **"How does … work?" questions get the explanation and the code.** Questions with *how*, *why*,
+  *explain*, *what happens* or *walk me through* are answered from the readmes and pointed at the
+  code that does it, citing both. The code is found mainly by **following the readmes' own links
+  to code**, e.g. `[src/main.py:217-218](src/main.py#L217-L218)` in the RAG guide, so each
+  explanation comes with exactly the code it describes; the search model matches questions to
+  code poorly. Keyword matches in the code (e.g. "stream", "faiss") are added too.
+- **Diagrams when several files work together.** If the sources come from more than one file, Envie
+  adds a small diagram of how they connect, one arrow per step, each with its citation number,
+  e.g. `streamChat() [1] → do_POST() [2] → …`. The app shows it in a monospace box, and its numbers
+  are links too.
+- **Code is labelled,** e.g. *"(Code: src/main.py, in function stream_response)"*, and this app's
+  own code (`src/live_qa.py`, whose comments mention almost every topic) is only used for code
+  when the question is about Envie or names the file.
 - **Questions about Envie itself,** e.g. *"How do you work?"*, always get the start of
   `src/live_qa.py` and of this guide, where the app describes itself.
 - **Images are sources too.** Every image a readme shows, e.g. the learning-steps diagram, is
@@ -176,7 +199,8 @@ through the questions one at a time, and you choose the order. While an answer a
 - **Ollama's port (11434) stays private.** Its API has no password, so the dev container never
   forwards it. Only ever make port **8501** public ([readme-safety.md](readme-safety.md),
   section 11).
-- **Only `.md` and `.py` files are read,** so keep secrets out of those, too.
+- **Only `.md`, `.py`, `.js`, `.json`, `.sh`, `.yml` and `.yaml` files are read,** so keep secrets out of
+  those, too.
 
 More: [readme-safety.md](readme-safety.md).
 
