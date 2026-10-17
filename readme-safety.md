@@ -1,6 +1,6 @@
 # Safety and Security
 
-This guide collects the safety and security points of this project in one place: the two rules
+This guide collects the safety and security points of this project in one place: the three rules
 the presentation builds up to, and the other risks found while building it. Each section says
 **where it applies in this project** and **what to do**.
 
@@ -13,7 +13,7 @@ the presentation builds up to, and the other risks found while building it. Each
 
 ---
 
-## The two rules
+## The three rules
 
 1. ⚠ **Disable tools by default.** In Agent mode, VS Code turns on every tool, 118 on this
    computer: editing files, running terminal commands, fetching web pages, acting on GitHub. Start
@@ -26,6 +26,11 @@ the presentation builds up to, and the other risks found while building it. Each
    injected instructions, or grant an agent broad tools. Read the raw file and its `tools:` list
    before using it. Details: "Security: public agents and skills can contain injections" in
    [06_readme-mcp-agents.md](06_readme-mcp-agents.md).
+3. ⚠ **Keep secrets out of the model's reach.** `.gitignore` only keeps a file out of Git, not out
+   of the model's context: an agent can read `.env` with its tools, often without asking, and
+   send it to a cloud model. Keep secrets outside the project folder, block reading them in each
+   harness, and don't attach or open them while chatting. Details: section 11 below, and section 8
+   of [04_readme-harness.md](04_readme-harness.md).
 
 ---
 
@@ -43,6 +48,7 @@ the presentation builds up to, and the other risks found while building it. Each
 | 8 | Fetched content can't be trusted | The Fetch MCP server, `#fetch` |
 | 9 | Dev container and Codespaces settings | XSRF protection off, forwarded ports |
 | 10 | Children as the audience | The toddler vocabulary activity |
+| 11 | Secrets reaching agents and the cloud (rule 3) | `.env` files, tokens; cloud agents; agents using cloud models |
 
 ### 1. Local servers reachable from your network
 
@@ -197,6 +203,64 @@ educators or child-safety specialists.
   children's privacy laws such as COPPA in the US, or GDPR in Europe), accessibility, and ongoing
   monitoring.
 
+### 11. Secrets reaching agents and the cloud (rule 3)
+
+A `.env` file holds secrets such as API keys and tokens, as plain text. In this project, `.env` is
+in `.gitignore`, and nothing needs one: the models run locally. But in projects that do have one,
+this is how it can leave your computer.
+
+**No harness reads `.env` on its own.** It isn't part of the hidden context, and it's only sent if
+something puts it into the conversation. The catch is that in Agent mode, **the model** decides
+what to read, not you:
+
+| How `.env` gets into the conversation | Who decides | Does `.gitignore` stop it? |
+|---|---|---|
+| You attach it: drag and drop, paperclip, `#file`, `@.env` | You | No |
+| It's the file open in the editor, and the chat includes the current file | The harness (Copilot shows it as a chip you can turn off) | No |
+| The agent **reads** it with a file-reading tool, e.g. while looking for a setting or a bug | The model | **No**: read tools open any file you can open |
+| The agent **searches** the project | The model | **Often**: search tools usually skip ignored files (ripgrep, which Claude Code and Codex use, and VS Code's search do by default) |
+| The agent runs a command that prints it: `cat .env`, `printenv`, an app that logs its settings | The model, with your approval | No |
+| A **cloud agent** works on a copy of the repository (Copilot **Cloud**, `claude --cloud`, `codex cloud`; [04_readme-harness.md](04_readme-harness.md), section 7) | You, by starting it | **Yes**, if it was never committed. Anything committed goes with it, and stays in the Git history even after you delete the file. |
+
+**`.gitignore` doesn't keep a file out of the model's context.** It only tells Git not to commit
+the file. The file is still in the project folder, where read tools, commands and attachments can
+reach it. Once it's read, its contents are part of the conversation: sent with every following
+request (to the vendor, with a cloud model) and saved in the session files.
+
+**How to prevent it**, strongest first:
+
+1. **Keep secrets out of the project folder.** This is the only fix that works in every harness,
+   for every way of reading a file. Store secrets as Windows environment variables
+   (`setx MY_API_KEY …`) or in a password or secrets manager. If a tool needs a `.env` file, keep
+   it **outside** the project (e.g. `%USERPROFILE%\secrets\<project>.env`) and load it by its full
+   path.
+2. **Block reads in each harness.** Reading a file inside the project usually happens **without
+   asking** in all three, so approvals alone won't catch it:
+
+   | Harness | How to block reading `.env` | What it covers |
+   |---|---|---|
+   | **Claude Code** | In `.claude/settings.json`: `"permissions": { "deny": ["Read(./.env)", "Read(./.env.*)"] }` | Claude Code's own read tool. A shell command like `cat .env` is separate, so keep approvals on for commands. |
+   | **Codex** | A permission profile in `config.toml` with filesystem `deny_read` paths (present in this version; check Codex's documentation for the exact layout) | Codex's sandbox, including commands it runs |
+   | **Copilot** | No per-file read block found for its read tool. The terminal sandbox (`chat.agent.sandbox.enabled`, preview) has `denyRead` paths in `chat.agent.sandbox.fileSystem.userConfiguredPaths`, which stop **terminal commands** reading the file. Organizations on Copilot Business or Enterprise can use **content exclusion**. | Commands in the sandbox; the read tool only with content exclusion. For Copilot, step 1 matters most. |
+
+   Copilot already protects against **edits**: its default `chat.tools.edits.autoApprove` list
+   excludes `.env`, so changing it always needs your approval. That doesn't stop reading.
+3. **Don't add it yourself.** Don't drag `.env` into a chat or attach it with `#file` or `@`, and
+   **close it in the editor before chatting**, or turn off the current-file chip.
+4. **Keep approvals on for commands**, so you see *"Run: cat .env"* or *"printenv"* before it
+   happens.
+5. **Prefer a local model.** If `.env` is read anyway, it goes to Ollama on your computer, not to
+   a vendor. It's still saved in the session files on disk.
+6. **Never commit secrets, and limit the damage.** Keep `.env` in `.gitignore`, and turn on
+   GitHub's **secret scanning** and **push protection**. Give cloud agents as few secrets and as
+   little internet access as possible. Use tokens with the fewest permissions and shortest lifetime
+   possible, and if one was ever sent to a cloud model or pushed, **change it**: deleting it
+   doesn't take it back.
+
+> Found in the installed versions (VS Code 1.142, Claude Code 2.1.301, Codex extension 26.1007).
+> Not verified: the exact `deny_read` layout for Codex, and whether Copilot's sandbox `denyRead`
+> also covers its file-reading tool.
+
 ---
 
 ## Checklist
@@ -209,8 +273,10 @@ Before a demo:
 - [ ] No `vectorstore/` from anywhere else
 - [ ] A **new chat** for each step, with no switching between local and cloud models in one chat
 - [ ] Debug logging off afterwards, and exports deleted
+- [ ] No `.env` or other secrets in the project folder, and no cloud agents used during the demo
 
 Before using anything here for real:
 - [ ] Downloads pinned (section 4)
 - [ ] Every generated activity reviewed by an adult (section 10)
+- [ ] Secret scanning and push protection on; agents denied access to `.env` (section 11)
 - [ ] Remember: this is an example project, not a product

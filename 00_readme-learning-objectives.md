@@ -1,8 +1,8 @@
 # Learning Objectives and Demo Plan
 
 This is the plan for presenting the project in six steps, **01 to 06**, matching the numbered
-guides. Each step has **at most three learning objectives** and **a demonstration of about 8 to
-12 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
+guides. Each step has **at most three learning objectives** (four in step 04, which adds safety rule 3)
+and **a demonstration of about 8 to 13 minutes**. The times are recommendations, not limits: with an introduction and questions, plan
 for a little over an hour. Each objective completes the sentence
 **"After this step, participants will be able to …"**.
 
@@ -46,6 +46,8 @@ git switch --detach 378b56c
       **Claude Code** and **Codex** extensions installed and signed in, so their tabs work in step 04.
 - [ ] For step 04's local Claude Code: Ollama running with `OLLAMA_CONTEXT_LENGTH` raised (e.g.
       `32768`), and `ollama launch claude` tried once with `qwen3.5:4b`, so nothing installs live.
+- [ ] For step 04's rule 3 demo: **no** real `.env` anywhere in the project; the deny rule ready to
+      paste; a screenshot of the refusal as a backup.
 
 After step 04, go back to the latest version **before** step 05:
 ```powershell
@@ -82,7 +84,7 @@ push, in a browser, or printed.
 ## The safety thread
 
 Safety is one of the most important parts of the presentation. It builds up across the steps, and
-participants should leave able to explain these two rules:
+participants should leave able to explain these three rules:
 
 1. **⚠ Disable tools by default.** In Agent mode, VS Code turns on every tool, 118 on this
    computer: editing files, running terminal commands, fetching web pages, acting on GitHub. A
@@ -93,6 +95,11 @@ participants should leave able to explain these two rules:
    from a public collection, a marketplace or a cloned repository can hide injected instructions,
    or grant itself broad tools. Read the raw file and its `tools:` list before using it. *(Steps 04,
    05 and 06)*
+3. **⚠ Keep secrets out of the model's reach.** `.gitignore` only keeps a file out of Git, not out
+   of the model's context. An agent can read `.env` with its tools, often without asking, and send
+   it to a cloud model; a cloud agent takes everything committed. Keep secrets outside the project
+   folder, block reading them in each harness, and don't attach or open them while chatting.
+   *(Step 04)*
 
 Supporting points along the way:
 - "Local" protects your data from the model's maker. It doesn't limit what **tools** can do on your
@@ -221,10 +228,10 @@ server once (model loading takes 10–30 seconds).
 
 ---
 
-## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (12 minutes)
+## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (13 minutes)
 
-Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8) and
-[readme-sessions.md](readme-sessions.md)
+Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8),
+[readme-sessions.md](readme-sessions.md), and section 11 of [readme-safety.md](readme-safety.md)
 
 **Learning objectives:**
 1. **Distinguish** what the `@`, `/` and `#` operators do, and **recognize** that each **harness**
@@ -247,25 +254,31 @@ Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8) and
    tab is a front end for the CLI**: it starts that program and passes messages to it as JSON, so
    the CLI and the tab connect to a local model the same way (Claude Code: `ollama launch claude`
    or `ANTHROPIC_BASE_URL`; Codex: `codex --oss` or `config.toml`; Copilot: the model picker, or
-   `ollama launch copilot` for the CLI). ⚠ Each harness also sends **hidden context** with every
-   message (system prompt, tools, instruction files, skills list, environment), which goes
-   wherever the model runs, local or cloud.
+   `ollama launch copilot` for the CLI).
+4. ⚠ **Explain what leaves your computer, and how to keep secrets out of it** (safety rule 3).
+   Each harness sends **hidden context** with every message (system prompt, tools, instruction
+   files, skills list, environment), which goes wherever the model runs. A `.env` file isn't sent
+   on its own, but **`.gitignore` doesn't keep it out of the model's context**: an agent can read
+   it with its tools, often without asking, and a cloud agent takes everything committed. Keep
+   secrets outside the project folder, block reading them in each harness (e.g. Claude Code's
+   `permissions.deny`), and don't attach or open them while chatting.
 
 **Demonstration:**
 | Time | What you do | What to point out |
 |---|---|---|
-| 2 min | In the Extension Development Host (commit `378b56c`): Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` | `@` = who answers, `/` = what to do: our plugin adds `@tinyllama`, VS Code's harness finds `/pirate` in `.github/skills/`. |
+| 2 min | In the Extension Development Host (commit `378b56c`): Chat view → **new chat** → **Local** → **Ask**. Ask `@tinyllama /pirate what is a stack?` Then ⚠ open `.github/skills/pirate/SKILL.md` raw. | `@` = who answers, `/` = what to do: our plugin adds `@tinyllama`, VS Code's harness finds `/pirate` in `.github/skills/`. A skill is Markdown the model obeys (rule 2). |
 | 2 min | In your **main** VS Code window, type `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs. Show the operators table (04, section 7). | The same keys mean different things in each tab: `@` is a participant in one and a file in the others. `/pirate` only appears in the Chat tab, because only Copilot reads `.github/skills/`. Three harnesses, three sets of folders. |
 | 3 min | Side by side: `@tinyllama` in the Chat view (left) and **TinyLlama: Open Chat** (right). Ask both *"What was my first message?"*, then **New Session** / **Clear** and ask again. Show the **Sessions** list. | The model remembers nothing: each program keeps the history and resends it. VS Code saves sessions to disk; our panel only in memory. The session title came from a **utility model**. Show the context table (readme-sessions, section 2), then the orchestration table (04, section 7): handoffs are Copilot-only buttons; all three have subagents. |
-| 3 min | Show the program behind the Claude Code tab: `claude.exe` in the extension's `resources
-ative-binary\` folder. In a terminal, run `ollama launch claude` and choose `qwen3.5:4b`; press **Shift+Tab** out of auto mode. Then show the hidden-context table (04, section 8). | The tab is a front end for the CLI: the same program, so the same way to connect a local model. Claude Code now runs on your GPU, and warns it doesn't know Qwen's context size. Its hidden prompt is large; Copilot's is about 9,000 tokens for "Hello?". ⚠ With a cloud model, all of it (instructions, skills list, attached files) leaves your computer. |
-| 2 min | ⚠ Open `.github/skills/pirate/SKILL.md` raw, and name each harness's permission setting: **Configure Tools**, Claude Code's permission modes, Codex's `sandbox_mode`. | A skill is Markdown the model obeys, and it's sent with every request. Each harness has its own lock: turning tools off in one doesn't restrict the others. |
+| 3 min | Show the program behind the Claude Code tab: `claude.exe` in the extension's `resources\native-binary\` folder. In a terminal, run `ollama launch claude` and choose `qwen3.5:4b`; press **Shift+Tab** out of auto mode. Then show the hidden-context table (04, section 8). | The tab is a front end for the CLI: the same program, so the same way to connect a local model. Claude Code now runs on your GPU, and warns it doesn't know Qwen's context size. Its hidden prompt is large; Copilot's is about 9,000 tokens for "Hello?". |
+| 3 min | ⚠ Rule 3, live and safely: create a dummy `.env` containing `DEMO_TOKEN=not-a-real-secret`. In the Claude Code terminal on Qwen, ask *"What settings does this project use?"* Then add the deny rule to `.claude/settings.json`, restart Claude Code, and ask again. Delete the dummy `.env` afterwards. | `.env` is in `.gitignore`, yet the agent can read it, probably without asking. With a cloud model, the token would now be with the vendor. After the deny rule, the read is refused. Each harness has its own lock: name Copilot's **Configure Tools**, Claude Code's permission modes and deny rules, and Codex's `sandbox_mode`. |
 
 **Prepare beforehand:** the Extension Development Host on commit `378b56c` with the inference
 server running (see the pre-flight checklist); your **main** VS Code window with the Claude Code
 and Codex extensions installed and signed in; [readme-sessions.md](readme-sessions.md) and section 8
-of [04_readme-harness.md](04_readme-harness.md) open for the tables. Why small models can't use
-Agent mode is covered in step 05.
+of [04_readme-harness.md](04_readme-harness.md) open for the tables. For the rule 3 demo, use only
+the dummy token and the **local** model, and rehearse it: a small model may not read `.env` every
+time, so have the deny rule's refusal ready as a screenshot. Why small models can't use Agent mode
+is covered in step 05.
 
 **Afterwards:** `git switch main`, and close the Extension Development Host, before step 05.
 
@@ -333,11 +346,11 @@ changes daily.
 | 01 Setup | 10 | Describe training vs. inference · Explain what Ollama abstracts away · ⚠ Explain a model's supply chain and bias |
 | 02 RAG | 10 | Describe the RAG steps · Explain sources · Demonstrate local inference |
 | 03 Serving inference | 8 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
-| 04 Harnesses | 12 | Distinguish @, / and # per harness · ⚠ Compare context handling and orchestration · ⚠ Explain local models, CLI vs. tab, and hidden context |
+| 04 Harnesses | 13 | Distinguish @, / and # per harness · ⚠ Compare context handling and orchestration · Explain local models and CLI vs. tab · ⚠ Explain what leaves your computer, and keeping secrets out |
 | 05 Models | 10 | Compare models by version, size and origin · Explain tool conditions · ⚠ Explain tools off by default |
 | 06 MCP and agents | 10 | Describe MCP · Distinguish instruction files · ⚠ Describe injections in public `.md` files |
-| **Total** | **60** | 18 objectives |
+| **Total** | **61** | 19 objectives |
 
 **For a quick check of learning,** ask participants at the end of each step to explain one objective
-to the person next to them in one minute. End with the two safety rules: they should be able to
-state both.
+to the person next to them in one minute. End with the three safety rules: they should be able to
+state all three.

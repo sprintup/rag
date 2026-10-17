@@ -741,7 +741,7 @@ needs Docker, and its options are environment variables, e.g. `GITHUB_TOOLSETS="
 
 ## Safety with the GitHub server
 
-This server is a good example of why the two safety rules matter:
+This server is a good example of why the safety rules matter:
 - **It acts as you.** Whatever your GitHub account can do (push, comment, close issues, change
   settings on your repositories), its write tools can do. Start **read-only** (`/readonly` or
   `GITHUB_READ_ONLY=1`), and add write access only for a specific task.

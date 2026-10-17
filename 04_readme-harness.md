@@ -353,6 +353,105 @@ collections are instructions the model obeys, just like skills.
 > Found by searching the installed programs (VS Code 1.142, Claude Code 2.1.301, Codex extension
 > 26.1007), not by running them. Teams in Claude Code and Codex are experimental.
 
+### Background tasks: what runs while you're not watching
+
+"Background" means two different things in a harness:
+1. **Background work:** commands or whole agents that keep running while you carry on, on your
+   computer or in the cloud.
+2. **Background model jobs:** small jobs the harness gives a model without asking, such as writing
+   a session's title or summarizing a long chat.
+
+**1. Background work**
+
+| | Copilot | Claude Code | Codex |
+|---|---|---|---|
+| **Long commands** (servers, builds, tests) | The agent can run them in the terminal while it carries on | The shell tool can run a command in the background (`run_in_background`), and **Ctrl+B** moves a running one there | Background terminals, which keep running between steps |
+| **A background agent on your computer** | The **Copilot CLI** session type: in Copilot's words, *"a background agent running locally on your machine"* that *"works asynchronously in a Git worktree… isolated from your main workspace"*. Settings offer a choice of worktree or workspace, and automatic commits. | Subagents and tasks can run in the background while you keep chatting | Several agent threads per session (`spawn_agent`) |
+| **An agent in the cloud** | The **Cloud** session type: *"the GitHub Copilot coding agent… works asynchronously in the cloud to implement changes and pull requests"* | Claude Code on the web; a session can be moved between the web and your computer ("teleport") | Codex cloud tasks (`codex cloud`, needs a ChatGPT sign-in) |
+
+In each, you can start a task, carry on with something else, and come back for the result:
+Copilot's background and cloud sessions appear in VS Code's **Sessions** list, and Claude Code and
+Codex keep their own session lists in their tabs.
+
+**2. Background model jobs**
+
+| | Copilot | Claude Code | Codex |
+|---|---|---|---|
+| **Which model** | A **utility model**, which may be a GitHub cloud model even when your main model is local | A small, fast model, Haiku by default | Mostly the main model |
+| **Jobs** | Titles, summarizing long chats, choosing tools; experimentally, keeping a to-do list (`backgroundTodoAgent`) | Titles, summaries and other quick jobs | Summarizing long chats; `/review` can use its own `review_model` |
+| **Keeping it local** | `chat.byokUtilityModelDefault`, `chat.useCopilotModelsForUtilityModels` ([readme-safety.md](readme-safety.md), section 5) | `ANTHROPIC_DEFAULT_HAIKU_MODEL` pointed at the local model (section 8) | Nothing extra; it uses the model you set |
+
+More on how each one keeps and trims the conversation:
+[readme-sessions.md](readme-sessions.md), section 2.
+
+**How to do it, per provider**
+
+*GitHub Copilot (Chat tab):*
+1. **Long command:** ask the agent to start it (e.g. *"start the Streamlit app"*); it runs in a
+   terminal you can open, while the agent carries on.
+2. **Background agent on your computer:** in the Chat view, click the session type under the input
+   box (**Local**) and choose **Copilot CLI**. If asked, choose **Worktree** (a separate copy of the
+   repository) rather than **Workspace**. Describe the task and send it. You can open another chat
+   meanwhile; the session shows its progress in the **Sessions** list. When it's done, review its
+   changes, then merge them into your branch. An existing Local chat can also be moved there with
+   **Continue In**.
+3. **Cloud agent:** the repository must be on GitHub, with the Copilot coding agent available for
+   it. Choose **Cloud** as the session type (or **Continue In → Cloud**) and describe the task. It
+   works on a new branch and opens a **pull request**, which you review on GitHub.
+
+*Claude Code (tab or `claude` in a terminal):*
+1. **Long command:** ask for it to run in the background, or press **Ctrl+B** while a command or
+   subagent is running to move it there. `/tasks` lists what's running in the background,
+   including subagents.
+2. **Background agent on your computer:** ask Claude Code to *"use a subagent in the background
+   to …"*, or press **Ctrl+B** on a running subagent; check on it with `/tasks`.
+3. **Cloud agent:** in a terminal, `claude --cloud "<what to do>"` starts a cloud session and
+   prints its ID (`--remote` is the older name). Follow it at `claude.ai/code` or in the Claude
+   mobile app, and bring it back to your computer with `claude --teleport <session ID>`.
+
+*Codex (tab or `codex` in a terminal):*
+1. **Long command:** Codex keeps long commands running as **background terminals**; its status
+   shows *"Background terminals"* while any are running.
+2. **Background agent on your computer:** ask Codex to split the task between agents; it starts
+   them with `spawn_agent`. This may need Codex's multi-agent feature turned on; check Codex's
+   documentation for your version.
+3. **Cloud agent:** `codex cloud` (after `codex login` with a ChatGPT account) lists your cloud
+   tasks and starts new ones. Each runs in an OpenAI cloud environment set up for your GitHub
+   repository, and its result comes back as a change you apply or a pull request.
+
+**⚠ Data privacy: where your code and prompts go**
+
+| | Your code | Your prompts and the agent's work | The model | Stays on your computer? |
+|---|---|---|---|---|
+| **Long command or background agent, local model** | Stays here | Session files on your disk | Ollama, here | **Yes**, if background model jobs are local too |
+| **Long command or background agent, cloud model** | The parts the agent reads go to the vendor with each request | Sent to the vendor; session files also on your disk | The vendor's | **No** |
+| **Cloud agent** (Copilot Cloud, `claude --cloud`, `codex cloud`) | The **whole repository** is copied to the vendor's machines and the agent runs there | Stored by the vendor; the result is a branch or pull request on GitHub | The vendor's | **No**. Nothing about it is local |
+| **Background model jobs** (titles, summaries) | Parts of the conversation | Sent to whichever model does the job | Copilot: possibly a GitHub cloud model; Claude Code: Haiku unless changed; Codex: your model | Only if that model is local |
+
+**What this means:**
+- **A cloud agent can't be private.** It can't use a local model, and it needs the repository on
+  the vendor's machines. Don't use one for code or data that must stay on your computer, or that
+  your school or employer hasn't approved for that vendor.
+- **Secrets travel with the repository.** Anything committed, such as an `.env` file, a token or
+  personal data, goes to the cloud environment too. Cloud agents can also be given environment
+  variables and internet access there; give them as little as possible. Uncommitted secrets aren't
+  safe either: a local agent can read them (section 8, "Secrets", and safety rule 3).
+- **Pull requests are visible to everyone who can see the repository.** On a public repository,
+  the agent's branch, commits and messages are public.
+- **A background agent runs while you're not watching.** It either waits for approvals or runs
+  without asking, depending on its settings. Don't turn on automatic approval just to make it
+  faster. Copilot's **Worktree** option keeps its changes away from your files until you merge
+  them; with automatic commits on, it commits without asking.
+- **Session files stay on your disk** for local and background sessions alike, with your full
+  prompts ([readme-sessions.md](readme-sessions.md), section 4).
+- **For a fully local setup,** use only local sessions with a local model, and point the
+  background model jobs at it too (section 8).
+
+> Found in the installed programs (VS Code 1.142, Claude Code 2.1.301, Codex extension 26.1007):
+> Copilot's own descriptions where quoted, and Claude Code's and Codex's commands from their help
+> text. None of the background or cloud modes was run here, so menu names may differ slightly.
+> Check each vendor's documentation for what its cloud environment keeps and for how long.
+
 ### Is there a "harness API"?
 
 Not a single one. There are a few layers:
@@ -575,6 +674,29 @@ vendor's servers for a cloud model.
 
 > Claude Code's and Codex's hidden context is described from what each program contains, not
 > measured here. Check it with Ollama's log before quoting sizes.
+
+### ⚠ Secrets: `.gitignore` doesn't keep them out of the context (safety rule 3)
+
+A `.env` file isn't part of the hidden context: no harness reads it on its own. But anything an
+agent **reads** joins the conversation, and in Agent mode the model decides what to read.
+`.gitignore` only keeps a file out of Git: read tools, shell commands (`cat .env`) and attachments
+can still reach it, and reading a project file usually happens **without asking** in all three
+harnesses. Once read, it goes with every following request, to the vendor if the model is in the
+cloud, and into the session files. A cloud agent (section 7, "Background tasks") also takes
+everything that was ever committed.
+
+How each harness can block it:
+
+| Harness | Block reading `.env` | Notes |
+|---|---|---|
+| **Claude Code** | `.claude/settings.json`: `"permissions": { "deny": ["Read(./.env)", "Read(./.env.*)"] }` | Blocks its read tool; keep approvals on for shell commands |
+| **Codex** | `deny_read` paths in a `config.toml` permission profile | Applies to its sandbox, including commands |
+| **Copilot** | No per-file read block for its read tool; `denyRead` in the terminal sandbox settings (preview) stops commands; content exclusion on Business/Enterprise | Edits to `.env` already always need approval |
+
+**The fix that works everywhere:** keep secrets **outside the project folder**, e.g. as Windows
+environment variables or in a secrets manager. Also don't attach `.env` or leave it open in the
+editor while chatting. The full list, with what each layer covers:
+[readme-safety.md](readme-safety.md), section 11.
 
 ---
 

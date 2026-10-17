@@ -45,15 +45,18 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | **01 Setup** | The `models/` folder and `model.safetensors`; `hf download` next to `ollama list`; ⚠ a model card. | Training produces weights, inference uses them. What Ollama hides and why it's a stable provider for VS Code. ⚠ A model's supply chain and bias. | [01](01_readme-setup.md) |
 | **02 RAG** | Upload lecture slides to the **Envie** app, ask about them, open **Sources**. Resource Monitor filtered by the app's Process ID. | Chunk → embed → store → retrieve → generate; checking answers against sources; proving it's local. | [02](02_readme-rag-user-guide.md) |
 | **03 Serving inference** | `src/inference_server.py` as a mini model provider, used by our **TinyLlama Chat** panel. The panel has no way to add context. Stop the server and the answers stop. | How providers serve models over an HTTP API; a model only knows its request; why our server isn't a VS Code model provider. | [03](03_readme-plugin-startup.md) |
-| **04 Harnesses** | `@tinyllama /pirate` in Copilot's Chat view; `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs; the plugin's chat next to `@tinyllama`; ⚠ the hidden-context table. | Each harness defines its own operators and folders; who keeps the history, utility models, ⚠ each harness's permissions; which harnesses can use a local model, and ⚠ what hidden context goes with every message. | [04](04_readme-harness.md), [sessions](readme-sessions.md) |
+| **04 Harnesses** | `@tinyllama /pirate` in Copilot's Chat view; `@`, `/` and `#` in the **Chat**, **Claude Code** and **Codex** tabs; the plugin's chat next to `@tinyllama`; Claude Code on Qwen; ⚠ the agent reading a dummy `.env`. | Each harness defines its own operators and folders; who keeps the history, utility models, ⚠ each harness's permissions; which harnesses can use a local model; ⚠ what hidden context goes with every message, and why `.gitignore` doesn't keep `.env` out of it (rule 3). | [04](04_readme-harness.md), [sessions](readme-sessions.md) |
 | **05 Models** | Qwen 3.5 in **Ollama** on the GPU, in Copilot Chat. ⚠ Configure Tools: 118 → 0 → only **read**. In Agent mode, Qwen picks the pirate skill itself (*"Skill Invoked"*). | Version vs. size vs. origin; model, mode and setup for tool use; ⚠ why tools are off by default. | [05](05_readme-models.md) |
 | **06 MCP and agents** | `/word-of-the-day`: a prompt file, the **Idea Generator** agent, the **Fetch MCP server** and two instructions files produce a toddler activity for today's word (above). ⚠ Reviewing a public agent file. | The MCP tool-call round trip; instructions files vs. prompt files vs. skills vs. agents; ⚠ injections in public `.md` files. | [06](06_readme-mcp-agents.md) |
 
-**The two safety rules** the presentation builds up to:
+**The three safety rules** the presentation builds up to:
 1. ⚠ **Disable tools by default**, and enable only what a task needs.
 2. ⚠ **Be careful with `.md` files from public collections** (agents, skills, prompt files,
    instructions): the model follows them as instructions. Read the raw file and its `tools:` list
    first.
+3. ⚠ **Keep secrets out of the model's reach.** `.gitignore` doesn't stop an agent reading `.env`
+   and sending it to a cloud model. Keep secrets outside the project folder, and block reading them
+   in each harness.
 
 **Demo tips:**
 - **Warm up the models first:** `ollama run qwen3.5:4b "hi"`, and open the Envie app once, so the
@@ -78,7 +81,7 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP tools (Fetch), custom agents (Idea Generator), and turning tools off by default |
 | [readme-custom-harness.md](readme-custom-harness.md) | Building your own harness: the files you need, what VS Code's Chat view provides (`@`, `/`, `#`, drag and drop) vs. what you build in your own tab, and adding tools and the agent loop. |
 | [readme-sessions.md](readme-sessions.md) | Who remembers a conversation: the plugin's chat panel vs. `@tinyllama` sessions in the Chat view, side by side; where each state is kept and how to see it. |
-| [readme-safety.md](readme-safety.md) | All safety and security points in one place: the two rules, local servers on the network, pickle files, supply chain, pinning, privacy, logs, credentials, and why the examples aren't products. |
+| [readme-safety.md](readme-safety.md) | All safety and security points in one place: the three rules, local servers on the network, pickle files, supply chain, pinning, privacy, logs, credentials, secrets reaching agents and the cloud, and why the examples aren't products. |
 | [readme-context.md](readme-context.md) | Inspecting the hidden context VS Code sends, where `/` commands come from, and the Copilot Harness Builder |
 | [readme-model-training.md](readme-model-training.md) | Fine-tuning your own model and publishing it on Hugging Face |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running the RAG app in a dev container / GitHub Codespaces |
