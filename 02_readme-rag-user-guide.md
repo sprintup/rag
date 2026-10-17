@@ -277,7 +277,7 @@ person's name often find the wrong pages. Questions phrased like the document wo
 
 | File / folder | Purpose |
 |---|---|
-| [src/](src/) | All the Python code: [main.py](src/main.py) is the app; [small_model.py](src/small_model.py) is a terminal-only TinyLlama test (`python src/small_model.py`). |
+| [src/](src/) | All the Python code: [main.py](src/main.py) is the app; [live_qa.py](src/live_qa.py) is a shared live Q&A about this project, for presenting ([readme-live-qa.md](readme-live-qa.md)); [small_model.py](src/small_model.py) is a terminal-only TinyLlama test (`python src/small_model.py`). |
 | [requirements.txt](requirements.txt) | Libraries to install, with exact versions. |
 | `models/` | The downloaded models: the files the app runs. Not committed to git (too large). |
 | `vectorstore/` | Saved search index: `index.faiss` (vectors) and `index.pkl` (a pickle file with the chunks' text and sources). Safe to delete; it is rebuilt from `uploaded_docs/`. ⚠ Never load one you didn't create (see Step 4). |

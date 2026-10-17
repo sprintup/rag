@@ -79,6 +79,7 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen (Ollama, Foundry Local or this project's server), using the GPU, and Qwen in Copilot Chat |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP tools (Fetch), custom agents (Idea Generator), and turning tools off by default |
 | [readme-custom-harness.md](readme-custom-harness.md) | Building your own harness: the files you need, what VS Code's Chat view provides (`@`, `/`, `#`, drag and drop) vs. what you build in your own tab, and adding tools and the agent loop. |
+| [readme-live-qa.md](readme-live-qa.md) | A shared live Q&A for presenting: the class asks Envie about this project, with a moderated queue. Running it locally to test, and in your own GitHub Codespace. |
 | [readme-sessions.md](readme-sessions.md) | Who remembers a conversation: the plugin's chat panel vs. `@tinyllama` sessions in the Chat view, side by side; where each state is kept and how to see it. |
 | [readme-safety.md](readme-safety.md) | Safety with AI harnesses (Copilot, Claude Code, Codex): the three rules, hidden context, "local" isn't private, secrets, each harness's lock, session files and logs, prompt injection, tools acting as you, pinning MCP servers, other people's repositories, background and cloud agents, local model APIs without passwords, model supply chain. |
 | [readme-context.md](readme-context.md) | Inspecting the hidden context VS Code sends, where `/` commands come from, and the Copilot Harness Builder |
@@ -94,6 +95,7 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 rag/
 ├── src/
 │   ├── main.py                  ← Envie, the RAG app (Streamlit)
+│   ├── live_qa.py               ← Envie as a shared live Q&A about this project, for presenting
 │   ├── inference_server.py      ← local model behind an OpenAI-compatible API
 │   ├── small_model.py           ← terminal-only TinyLlama test
 │   └── vscode-extension/        ← the TinyLlama VS Code plugin
