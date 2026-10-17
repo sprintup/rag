@@ -48,9 +48,18 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
 - **Plain text only:** questions and answers are shown exactly as typed, so nobody can put links,
   images or formatting on everyone's screen.
 
-**The presenter key.** Each time the app starts, it makes a new random key and prints it in the
-terminal (after the first page load). Opening the app with `?key=<that key>` at the end of the
-address shows the queue controls. Without it, you're a participant.
+**The presenter link.** Each time the app starts, it makes a new random key, and prints two links
+in the terminal (after the first page load): the **presenter link**, which ends in
+`?key=<that key>` and shows the queue controls, and the **participant link**, without the key, to
+share. Without the key, you only see the queue, with no buttons.
+
+**Citations are links.** Each citation that matches a source, and each **From:** entry, opens
+those lines of the file on GitHub in a new tab, at the commit the app is running from (e.g.
+`.../blob/<commit>/src/inference_server.py#L1-L12`). GitHub scrolls to the lines and highlights
+them. Markdown files open as text (`?plain=1`), because line links don't work on GitHub's
+formatted view of them. The **Sources** dropdown shows only the first 3 lines of each source; the
+link shows the rest. Links need the project to be a clone of a
+GitHub repository, and that commit to be pushed; changes you haven't committed aren't on GitHub.
 
 ---
 
@@ -73,11 +82,11 @@ address shows the queue controls. Without it, you're a participant.
 2. A browser tab opens at <http://localhost:8501>. The first load reads and indexes the project,
    which takes a minute or so. The terminal then shows:
    ```
-     Presenter key: Xq3v9Lk2Tm0
-     Add ?key=Xq3v9Lk2Tm0 to the app's address to get the queue controls.
+     Presenter link (queue controls; don't share it): http://localhost:8501/?key=Xq3v9Lk2Tm0
+     Participant link (share this one):                http://localhost:8501
    ```
-3. **As the presenter:** open `http://localhost:8501/?key=<your key>`. The sidebar shows the
-   **Pause** and **Clear chat** buttons, and ↑ ↓ ✕ next to each question.
+3. **As the presenter:** open the presenter link (`Ctrl`+click it in the terminal). The sidebar
+   shows the **Pause** and **Clear chat** buttons, and ↑ ↓ ✕ next to each question.
 4. **As a participant:** open <http://localhost:8501> in a **private window** (`Ctrl+Shift+N` in
    Edge or Chrome), so it counts as a different person. It shows the queue without controls.
 5. **Test it:**
@@ -117,11 +126,14 @@ counts against **your** account's free monthly Codespaces hours (then billing).
    ```
 2. **Open it once,** at the address Codespaces opens for port 8501:
    `https://<your-codespace-name>-8501.app.github.dev`. The first load indexes the project; then
-   the terminal shows the **presenter key**.
-3. **Open it as the presenter** with your key added:
+   the terminal shows the **presenter link** and the **participant link**, with your codespace's
+   address already filled in.
+3. **Open the presenter link** (`Ctrl`+click it in the terminal). It looks like:
    ```
    https://<your-codespace-name>-8501.app.github.dev/?key=<your presenter key>
    ```
+   Check that **⏸ Pause** and **🗑 Clear chat** appear above the queue; if they don't, the page
+   was opened without the key.
 4. **Share it with the class.** In VS Code's **Ports** panel, right-click port **8501** →
    **Port Visibility** → **Public**. Share the address **without** `?key=…`, e.g. as a link or a
    QR code.
@@ -168,8 +180,9 @@ More: [readme-safety.md](readme-safety.md).
 
 | Problem | Fix |
 |---|---|
-| No presenter key in the terminal | The key appears after the **first page load**. Open the app once, then look again. |
-| The queue controls are missing | The key in the address is wrong, or the app was restarted and made a new key. Copy the latest one from the terminal. |
+| No presenter link in the terminal | The links appear after the **first page load**. Open the app once, then look again. |
+| The queue shows questions but no ↑ ↓ ✕, **Pause** or **Clear chat** | The page was opened without the presenter key, with a wrong key, or with one from before the app was restarted. Open the latest **presenter link** from the terminal. |
+| *"Bad message format: Bad 'setIn' index"* | A known problem with the experimental live updates in Streamlit 1.35, when the page reloads while it's redrawing. Close the message and reload the page. |
 | "Not Found" in Codespaces | Check that the address has `-8501.app` in it. |
 | Participants can't open the address | Port 8501 is still **Private**. Set it to **Public** in the Ports panel. |
 | *"Embedding model not found"* | The models aren't downloaded. Locally, see [01_readme-setup.md](01_readme-setup.md); in Codespaces, run `bash .devcontainer/post-create.sh`. |

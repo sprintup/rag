@@ -338,8 +338,15 @@ def get_live_chat():
 def get_presenter_key():
     # A new random key each time the app starts, shown only in the terminal
     key = secrets.token_urlsafe(8)
-    print(f"\n  Presenter key: {key}\n  Add ?key={key} to the app's address to get the queue controls.\n",
-          flush=True)
+    # In a codespace, the forwarded address is built from variables Codespaces sets
+    port = st.get_option("server.port")
+    if os.environ.get("CODESPACE_NAME") and os.environ.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"):
+        address = (f"https://{os.environ['CODESPACE_NAME']}-{port}."
+                   f"{os.environ['GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN']}")
+    else:
+        address = f"http://localhost:{port}"
+    print(f"\n  Presenter link (queue controls; don't share it): {address}/?key={key}"
+          f"\n  Participant link (share this one):                {address}\n", flush=True)
     return key
 
 ############################################
@@ -358,14 +365,64 @@ def plain(text):
 def shorten(text, length=60):
     return text if len(text) <= length else text[:length - 1] + "…"
 
+@st.cache_resource
+def github_files_url():
+    # The address of this project's files on GitHub, at the current commit, e.g.
+    # https://github.com/sprintup/rag/blob/<commit>. A commit rather than a branch keeps the line
+    # numbers right after later pushes. None if this isn't a GitHub clone, or git isn't available.
+    try:
+        git = lambda *args: subprocess.run(["git", "-C", PROJECT_DIR, *args], capture_output=True,
+                                           text=True, timeout=5).stdout.strip()
+        remote, commit = git("config", "--get", "remote.origin.url"), git("rev-parse", "HEAD")
+    except (OSError, subprocess.SubprocessError):
+        return None
+    match = re.match(r"(?:https://github\.com/|git@github\.com:)([\w.-]+/[\w.-]+?)(?:\.git)?/?$", remote)
+    return f"https://github.com/{match.group(1)}/blob/{commit}" if match and commit else None
+
+def github_link(text, file, first, last):
+    # A link to those lines of the file on GitHub, opening in a new tab, or just the text without a
+    # GitHub clone. The address is built here, never taken from the model's answer, and the text is
+    # plain(), so this is the only HTML on the page (shown with unsafe_allow_html=True).
+    base = github_files_url()
+    if not base:
+        return plain(text)
+    lines = f"L{first}" if first == last else f"L{first}-L{last}"
+    # GitHub shows Markdown files rendered, where line links don't work; ?plain=1 shows the text with
+    # line numbers, so #L... scrolls to the lines and highlights them, as it does for code
+    plain_view = "?plain=1" if file.lower().endswith(".md") else ""
+    url = html.escape(f"{base}/{file}{plain_view}#{lines}", quote=True)
+    return f'<a href="{url}" target="_blank" rel="noopener noreferrer">{plain(text)}</a>'
+
+def linked_answer(answer, sources):
+    # The answer as plain text, with each citation that matches a source turned into a link to
+    # those lines on GitHub. Citations that don't match stay plain, and are warned about below.
+    shown = plain(answer)
+    for match in re.finditer(r"\[([^\[\],]+),\s*lines?\s+(\d+)(?:\s*[-–]\s*(\d+))?\]", answer):
+        file, first = match.group(1).strip(), int(match.group(2))
+        last = int(match.group(3) or first)
+        if any(source["file"] == file and source["lines"][0] <= first and last <= source["lines"][1]
+               for source in sources):
+            shown = shown.replace(plain(match.group(0)), github_link(match.group(0), file, first, last))
+    return shown
+
+PREVIEW_LINES = 3   # lines of each source shown in the Sources dropdown; the link opens the rest
+
+def preview(text):
+    # The first few non-empty lines of a source, so opening Sources doesn't fill the screen
+    lines = [line for line in text.splitlines() if line.strip()]
+    shown = "\n".join(lines[:PREVIEW_LINES])
+    return shown + " …" if len(lines) > PREVIEW_LINES else shown
+
 def show_sources(sources):
     # The files and lines Envie was given, listed by the app itself, so they're right even when the
-    # model forgets to cite them. The expander shows the exact text of each.
-    st.caption("From: " + " · ".join(plain(source["label"]) for source in sources))
+    # model forgets to cite them, and linked to GitHub. The expander shows the exact text of each.
+    st.caption("From: " + " · ".join(github_link(source["label"], source["file"], *source["lines"])
+                                     for source in sources), unsafe_allow_html=True)
     with st.expander("Sources"):
         for source in sources:
-            st.markdown(f"**{plain(source['label'])}**")
-            st.caption(source["text"])
+            st.markdown(f"**{github_link(source['label'], source['file'], *source['lines'])}**",
+                        unsafe_allow_html=True)
+            st.caption(plain(preview(source["text"])))
 
 @st.experimental_fragment(run_every=1)
 def show_chat(live):
@@ -377,7 +434,7 @@ def show_chat(live):
             if message is current:
                 st.markdown(plain(message["answer"]) + "▌" if message["answer"] else "*Thinking…*")
             else:
-                st.markdown(plain(message["answer"]))
+                st.markdown(linked_answer(message["answer"], message["sources"]), unsafe_allow_html=True)
                 unverified = unverified_citations(message["answer"], message["sources"])
                 if unverified:
                     st.caption("⚠ Not in the sources Envie was given, so possibly made up: "
@@ -431,7 +488,8 @@ with st.sidebar:
     show_queue(live, is_presenter)
 
 st.subheader("Ask Envie about this project!")
-st.caption(f"Model: {LLM_NAME}, served by Ollama at {OLLAMA_URL} · Answers come only from this project's files")
+st.caption(f"Model: {LLM_NAME}, served by Ollama on the computer running this app · Answers come only from "
+           "this project's files, and their citations link to them on GitHub")
 show_chat(live)
 
 question = st.chat_input(f"Ask Envie a question about this project (up to {MAX_QUESTION_CHARS} characters)")
