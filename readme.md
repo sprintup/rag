@@ -78,6 +78,7 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | [04_readme-harness.md](04_readme-harness.md) | The Extension Development Host, `@tinyllama` in Copilot's Chat view, and skills |
 | [05_readme-models.md](05_readme-models.md) | Replacing TinyLlama with Qwen (Ollama, Foundry Local or this project's server), using the GPU, and Qwen in Copilot Chat |
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP tools (Fetch), custom agents (Idea Generator), and turning tools off by default |
+| [readme-agentic.md](readme-agentic.md) | Reasoning and agents: five levels of reasoning (fact sheet, routing, thinking, verification, the agent loop), what makes an app agentic, and how frontier models learned to reason (chain of thought, reinforcement learning, thinking budgets). |
 | [readme-custom-harness.md](readme-custom-harness.md) | Building your own harness: the files you need, what VS Code's Chat view provides (`@`, `/`, `#`, drag and drop) vs. what you build in your own tab, and adding tools and the agent loop. |
 | [readme-live-qa.md](readme-live-qa.md) | A shared live Q&A for presenting: the class asks Envie about this project, with a moderated queue. Running it locally to test, and in your own GitHub Codespace. |
 | [readme-sessions.md](readme-sessions.md) | Who remembers a conversation: the plugin's chat panel vs. `@tinyllama` sessions in the Chat view, side by side; where each state is kept and how to see it. |

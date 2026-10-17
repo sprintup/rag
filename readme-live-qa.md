@@ -88,7 +88,7 @@ part is the same: the `all-MiniLM-L6-v2` embedding model and a FAISS index.
 - **One chat for everyone,** updated every second in each browser.
 - **The queue:** each waiting question, shortened; **hover** over one to see all of it. Move
   questions up (**↑**) or down (**↓**), remove them (**✕**), **⏸ Pause** answering, and
-  **🗑 Clear chat**. There's one view: everyone who opens the app has the same controls.
+  **🗑 Clear** the chat. There's one view: everyone who opens the app has the same controls.
 - **Limits:** questions up to 300 characters, and up to 30 waiting.
 - **Shown as typed:** questions and answers can't put links, images or HTML on everyone's screen.
   The only formatting is Envie's `code` and **bold**, and the only links are the citations, which
@@ -110,7 +110,7 @@ Envie remembers nothing between questions by itself: each one is a separate requ
 harness, the app keeps a small **session state** and sends it with every question, before the
 sources. It's shared by the whole class, kept in memory, and reset when the app restarts.
 
-**🧭 Session state** (top of the sidebar) opens it in a window:
+**🧭 State** (in the row of buttons above the queue) opens it in a window:
 - **Current step:** choose the step the class is on. A question that mentions a step, e.g. *"We're
   on step 4"*, also sets it.
 - **The learning objectives checklist:** all 19 objectives from the summary table in
@@ -134,6 +134,18 @@ sources. It's shared by the whole class, kept in memory, and reset when the app 
   It's kept short, about 200–300 tokens: only the current step's objectives are listed in full,
   and only the start of the previous answer.
 - **Reset session state:** clears the step, the ticks and the previous exchange.
+
+## Reasoning
+
+**🧠 Think** (the checkbox in the row of buttons above the queue) lets Qwen think before it answers, for everyone.
+The thinking streams into a **🧠 Envie's reasoning** expander above the answer. It folds away
+once the answer starts. It's off by default because it's slow: on this project's PC, one question
+took 35 seconds instead of 11. On a Codespace's CPU, expect minutes. The setting is also part of
+the session state (`"reasoning": true`).
+
+Turn it on for questions where Envie answers the wrong question, e.g. *"Do you have access to the
+internet?"* For what thinking can and can't fix, the other levels of reasoning, and what would
+make Envie an agent, see [readme-agentic.md](readme-agentic.md).
 
 **How Envie uses it:**
 - It ties answers to the current step's objectives, and steers back to them if a question drifts.

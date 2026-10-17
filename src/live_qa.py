@@ -496,6 +496,7 @@ def state_for_envie(state):
         "objectives_done": sorted(state["done"]),
         "objectives_total": sum(len(s["objectives"]) for s in steps),
         "previous_exchange": state["last"],
+        "reasoning": state.get("reasoning", False),
     }
 
 def step_section(step):
@@ -774,28 +775,44 @@ def unverified_citations(answer, sources):
             unverified.append(name)
     return list(dict.fromkeys(unverified))
 
-def stream_response(user_content):
+def stream_response(user_content, reasoning=False):
     # The same OpenAI-style request the VS Code plugin sends; "stream" asks for the reply piece by
-    # piece, as server-sent events ("data: {...}" lines)
-    response = requests.post(f"{OLLAMA_URL}/v1/chat/completions", stream=True, timeout=600, json={
+    # piece, as server-sent events ("data: {...}" lines). Yields ("reasoning", text) for Qwen's
+    # thinking, if it's on, and ("answer", text) for the answer.
+    request = {
         "model": LLM_NAME,
         "messages": [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_content}],
-        "max_tokens": 400,   # about 150 words and a small diagram are asked for; this is a safety limit
+        # About 150 words and a small diagram are asked for; this is a safety limit. With reasoning,
+        # the thinking counts toward it too and often takes 1,500 tokens or more, so it's much higher.
+        "max_tokens": 5000 if reasoning else 400,
         "stream": True,
+    }
+    if not reasoning:
         # Qwen thinks before answering by default, which takes minutes on a CPU: answer straight away
-        "reasoning_effort": "none",
-    })
+        request["reasoning_effort"] = "none"
+    response = requests.post(f"{OLLAMA_URL}/v1/chat/completions", stream=True, timeout=1200, json=request)
     response.raise_for_status()
     response.encoding = "utf-8"
+    answered = False
     for line in response.iter_lines(decode_unicode=True):
         if not line or not line.startswith("data: "):
             continue
         data = line[len("data: "):]
         if data == "[DONE]":
             break
-        text = json.loads(data)["choices"][0]["delta"].get("content")
-        if text:
-            yield text
+        choice = json.loads(data)["choices"][0]
+        delta = choice["delta"]
+        # Ollama sends the thinking in "reasoning", separately from the answer's "content"
+        if delta.get("reasoning"):
+            yield "reasoning", delta["reasoning"]
+        if delta.get("content"):
+            answered = True
+            yield "answer", delta["content"]
+        if choice.get("finish_reason") == "length":
+            # max_tokens ran out: during the thinking, or partway through the answer
+            yield "answer", ("…\n\n_(Envie ran out of room here, and the answer is cut off.)_" if answered else
+                             "_Envie thought for too long and ran out of room to answer. Try again with 🧠 Think off, "
+                             "or ask a narrower question._")
 
 ############################################
 # One shared chat and a queue of questions
@@ -815,6 +832,9 @@ class LiveChat:
         # Session state button): the current step, the objectives ticked off, the previous exchange
         self.state = {"step": None, "done": set(), "last": None}
         self.state_version = 0   # changes whenever the state does, so the checklist redraws
+        # Qwen's thinking: off by default, for fast answers. A session setting, not part of the state
+        # that Reset clears.
+        self.reasoning = False
         # Qwen answers one question at a time, in this background thread
         Thread(target=self.answer_questions, daemon=True).start()
 
@@ -862,9 +882,15 @@ class LiveChat:
             self.state = {"step": None, "done": set(), "last": None}
             self.state_version += 1
 
+    def set_reasoning(self, on):
+        # Sets, rather than flips, so a click that arrives twice can't turn it back
+        with self.lock:
+            self.reasoning = on
+            self.state_version += 1
+
     def state_snapshot(self):
         with self.lock:
-            return {**self.state, "done": set(self.state["done"])}, self.state_version
+            return {**self.state, "done": set(self.state["done"]), "reasoning": self.reasoning}, self.state_version
 
     def snapshot(self):
         # A copy for drawing the page, so the background thread can keep writing
@@ -877,7 +903,7 @@ class LiveChat:
             with self.lock:
                 item = None if self.paused or not self.queue else self.queue.pop(0)
                 if item:
-                    self.current = {"question": item["text"], "answer": "", "sources": []}
+                    self.current = {"question": item["text"], "answer": "", "reasoning": "", "sources": []}
             if item is None:
                 time.sleep(0.5)
                 continue
@@ -890,9 +916,10 @@ class LiveChat:
                 prompt, sources = build_prompt(item["text"], state)
                 with self.lock:
                     self.current["sources"] = sources
-                for piece in stream_response(prompt):
+                # The setting when Envie starts the question applies to the whole answer
+                for kind, piece in stream_response(prompt, reasoning=state["reasoning"]):
                     with self.lock:
-                        self.current["answer"] += piece
+                        self.current[kind] += piece
             except Exception as error:
                 with self.lock:
                     self.current["answer"] += f"\n\n(Envie couldn't answer this one: {error})"
@@ -1051,6 +1078,15 @@ def show_sources(sources):
             else:
                 st.caption(plain(preview(source["text"])))
 
+REASONING_LINES_SHOWN = 4
+
+def thinking_html(text):
+    # Qwen's thinking isn't Markdown: indented lines would become code blocks and show the
+    # escapes. Escaped HTML on a single line is one HTML block, which Markdown leaves alone.
+    lines = html.escape(text.strip()).splitlines()
+    return ('<div style="font-size: 0.85em; opacity: 0.7; white-space: normal;">'
+            + "<br>".join(line.strip() for line in lines) + "</div>")
+
 @st.experimental_fragment(run_every=1)
 def show_chat(live):
     messages, current, queue, paused = live.snapshot()
@@ -1058,6 +1094,17 @@ def show_chat(live):
         with st.chat_message("user"):
             st.markdown(plain(message["question"]))
         with st.chat_message("assistant"):
+            # With reasoning on, Qwen's thinking is shown first. It can run to pages, so while it
+            # thinks only its last few lines show; after, all of it in a closed, scrolling box.
+            if message.get("reasoning"):
+                if message is current and not message["answer"]:
+                    latest = [line for line in message["reasoning"].splitlines() if line.strip()]
+                    st.markdown(thinking_html("🧠 Envie is thinking…\n" + "\n".join(latest[-REASONING_LINES_SHOWN:]) + "▌"),
+                                unsafe_allow_html=True)
+                else:
+                    with st.expander("🧠 Envie's reasoning"):
+                        with st.container(height=300):
+                            st.markdown(thinking_html(message["reasoning"]), unsafe_allow_html=True)
             if message is current:
                 st.markdown(plain(message["answer"]) + "▌" if message["answer"] else "*Thinking…*")
             else:
@@ -1102,16 +1149,30 @@ def show_session_state(live):
 
 @st.experimental_fragment(run_every=1)
 def show_queue(live):
-    state, _ = live.state_snapshot()
+    state, version = live.state_snapshot()
     total = sum(len(step["objectives"]) for step in learning_objectives())
     st.caption(f"Current step: {step_name(state['step']) if state['step'] else '(not set)'} · "
                f"{len(state['done'])} of {total} objectives done")
     _, _, queue, paused = live.snapshot()
     st.subheader(f"Question queue ({len(queue)})")
-    pause_col, clear_col = st.columns(2)
+    # All the controls on one row
+    state_col, pause_col, clear_col, reasoning_col = st.columns(4, gap="small")
+    if state_col.button("🧭 State", help="The current step, the learning objectives checklist, and what Envie "
+                                         "is told with every question"):
+        # A dialog can't open inside this fragment: rerun the whole page and open it there
+        st.session_state.show_state = True
+        st.rerun()
     pause_col.button("▶ Resume" if paused else "⏸ Pause", on_click=live.toggle_pause,
                      help="Stop or restart answering. A question already being answered finishes first.")
-    clear_col.button("🗑 Clear chat", on_click=live.clear_answers, help="Remove the answered questions from the chat")
+    clear_col.button("🗑 Clear", on_click=live.clear_answers, help="Remove the answered questions from the chat")
+    # One setting for the whole session. The key includes the setting, so everyone's checkbox
+    # follows when someone changes it; the click sets the value the checkbox shows.
+    reasoning_key = f"reasoning-{state['reasoning']}"
+    reasoning_col.checkbox("🧠 Think", value=state["reasoning"], key=reasoning_key,
+                           on_change=lambda: live.set_reasoning(st.session_state[reasoning_key]),
+                           help="Reasoning: let Qwen think step by step before answering, and show its reasoning. "
+                                "Applies from the next question. A few seconds more on a GPU; often one to several "
+                                "minutes per answer on a CPU, such as a codespace. See readme-agentic.md.")
     if not queue:
         st.caption("No questions waiting.")
     for position, item in enumerate(queue):
@@ -1130,15 +1191,18 @@ def show_queue(live):
 live = get_live_chat()
 print_address()
 
+# The chat and queue refresh every second, which would flash Streamlit's "Running… Stop" indicator
+# in the top right each time; hide it
+st.markdown('<style>[data-testid="stStatusWidget"] {visibility: hidden;}</style>', unsafe_allow_html=True)
+
 
 with st.sidebar:
     st.subheader("Live Q&A")
     st.caption("Envie answers questions about this project's files, one at a time. Everyone sees the same chat.")
     st.caption(f"Model: {LLM_NAME}, served by Ollama")
-    if st.button("🧭 Session state", use_container_width=True,
-                 help="The current step, the learning objectives checklist, and what Envie is told with every question"):
-        show_session_state(live)
     show_queue(live)
+    if st.session_state.pop("show_state", False):
+        show_session_state(live)
 
 st.subheader("Ask Envie about this project!")
 st.caption(f"Model: {LLM_NAME}, served by Ollama on the computer running this app · Answers come only from "
