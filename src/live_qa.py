@@ -92,21 +92,35 @@ def ollama_models():
     except requests.RequestException:
         return None
 
-@st.cache_resource(show_spinner="Starting Ollama...")
+@st.cache_resource
+def ollama_start_lock():
+    # Shared by every browser, so two page loads at once don't both start Ollama
+    return threading.Lock()
+
 def start_ollama():
-    # In a codespace, Ollama doesn't start by itself after a restart, so start it if it's installed
-    if ollama_models() is None and shutil.which("ollama"):
-        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         start_new_session=True)
-        for _ in range(20):
-            time.sleep(0.5)
-            if ollama_models() is not None:
-                break
+    # In a codespace, Ollama doesn't start by itself after a restart, so start it if it's installed.
+    # This runs on every page load, so it also works if Ollama was installed after the app started.
+    if ollama_models() is not None or not shutil.which("ollama"):
+        return
+    with ollama_start_lock():
+        if ollama_models() is None:
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)
+            for _ in range(20):
+                time.sleep(0.5)
+                if ollama_models() is not None:
+                    break
 
 start_ollama()
 models = ollama_models()
+if models is None and not shutil.which("ollama"):
+    st.error("Ollama isn't installed here. In a codespace, run `bash .devcontainer/post-create.sh` in the "
+             "terminal, which installs it and downloads Qwen; on your own computer, install it from ollama.com. "
+             "Then reload this page.")
+    st.stop()
 if models is None:
-    st.error(f"Can't reach Ollama at {OLLAMA_URL}. Start Ollama, then reload this page (see readme-live-qa.md).")
+    st.error(f"Ollama is installed but isn't answering at {OLLAMA_URL}. Start it (in a codespace: "
+             "`nohup ollama serve >/tmp/ollama.log 2>&1 &`), then reload this page.")
     st.stop()
 if LLM_NAME not in models:
     st.error(f"Ollama doesn't have {LLM_NAME} yet. Download it with `ollama pull {LLM_NAME}`, then reload this page.")

@@ -11,8 +11,17 @@ pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requiremen
 [ -d models/all-MiniLM-L6-v2 ] || hf download sentence-transformers/all-MiniLM-L6-v2 --local-dir models/all-MiniLM-L6-v2
 
 # Ollama serves Qwen for the live Q&A (src/live_qa.py). The version is pinned, so a new release
-# isn't installed without anyone noticing (readme-safety.md, section 8).
-command -v ollama >/dev/null || curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.40.4 sh
+# isn't installed without anyone noticing (readme-safety.md, section 8). Its installer unpacks a
+# .tar.zst file, which needs zstd, and the dev container's Debian image doesn't include it.
+if ! command -v ollama >/dev/null; then
+    if ! command -v zstd >/dev/null; then
+        # "|| true": the image also lists Yarn's package source, whose signing key fails to verify,
+        # so "apt-get update" reports an error even though Debian's own package lists update fine
+        sudo apt-get update -qq || true
+        sudo apt-get install -y -qq zstd
+    fi
+    curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.40.4 sh
+fi
 
 # Ollama has to be running to download a model: start it in the background if it isn't
 if ! curl -s http://127.0.0.1:11434/api/version >/dev/null; then

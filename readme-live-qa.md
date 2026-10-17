@@ -158,7 +158,9 @@ More: [readme-safety.md](readme-safety.md).
 | "Not Found" in Codespaces | Check that the address has `-8501.app` in it. |
 | Participants can't open the address | Port 8501 is still **Private**. Set it to **Public** in the Ports panel. |
 | *"Embedding model not found"* | The models aren't downloaded. Locally, see [01_readme-setup.md](01_readme-setup.md); in Codespaces, run `bash .devcontainer/post-create.sh`. |
-| *"Can't reach Ollama"* | Locally, start Ollama from the Start menu. In a codespace, the app starts it by itself when it's installed; if that fails, run `nohup ollama serve >/tmp/ollama.log 2>&1 &`, or the whole setup again with `bash .devcontainer/post-create.sh`. Then reload the page. |
+| *"Ollama isn't installed here"* | The codespace was created before Ollama was added to its setup, or the setup stopped early. Run `bash .devcontainer/post-create.sh`, which skips what's already done, installs Ollama and downloads Qwen, then reload the page. Locally, install Ollama from [ollama.com](https://ollama.com). |
+| *"This version requires zstd for extraction"* while installing Ollama | Run `sudo apt-get install -y zstd`, then the installer or `bash .devcontainer/post-create.sh` again. If `sudo apt-get update` fails on `dl.yarnpkg.com` (`NO_PUBKEY`), that's the image's Yarn package source, not Debian's; `zstd` still installs. |
+| *"Ollama is installed but isn't answering"* | Locally, start Ollama from the Start menu. In a codespace, the app tries to start it by itself; if that fails, run `nohup ollama serve >/tmp/ollama.log 2>&1 &`, then reload the page. |
 | *"Ollama doesn't have qwen3.5:4b"* | Run `ollama pull qwen3.5:4b`, then reload the page. |
 | Answers are very slow | Normal on a CPU. Use a 4-core codespace, keep questions short, and use **Pause** and ✕ to keep the queue manageable. `ollama ps` shows whether Qwen is loaded. |
 | A new readme isn't used | Files are read when the app starts. Stop it with `Ctrl+C` and start it again. |
