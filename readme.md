@@ -17,8 +17,7 @@ It shows, step by step:
 > **An example for learning, not a product.** Everything here, including the toddler vocabulary
 > activity below, demonstrates how the technology works. It isn't designed, tested or secured for
 > production use, and it isn't an educational product for children. Answers from small models can
-> be wrong or unsuitable: an adult must review anything before it's used with children. See
-> [readme-safety.md](readme-safety.md).
+> be wrong or unsuitable: an adult must review anything before it's used with children.
 
 ## What it can do: one example
 
@@ -81,7 +80,7 @@ The full plan, with learning objectives, timings and a pre-flight checklist, is 
 | [06_readme-mcp-agents.md](06_readme-mcp-agents.md) | MCP tools (Fetch), custom agents (Idea Generator), and turning tools off by default |
 | [readme-custom-harness.md](readme-custom-harness.md) | Building your own harness: the files you need, what VS Code's Chat view provides (`@`, `/`, `#`, drag and drop) vs. what you build in your own tab, and adding tools and the agent loop. |
 | [readme-sessions.md](readme-sessions.md) | Who remembers a conversation: the plugin's chat panel vs. `@tinyllama` sessions in the Chat view, side by side; where each state is kept and how to see it. |
-| [readme-safety.md](readme-safety.md) | All safety and security points in one place: the three rules, local servers on the network, pickle files, supply chain, pinning, privacy, logs, credentials, secrets reaching agents and the cloud, and why the examples aren't products. |
+| [readme-safety.md](readme-safety.md) | Safety with AI harnesses (Copilot, Claude Code, Codex): the three rules, hidden context, "local" isn't private, secrets, each harness's lock, session files and logs, prompt injection, tools acting as you, pinning MCP servers, other people's repositories, background and cloud agents, local model APIs without passwords, model supply chain. |
 | [readme-context.md](readme-context.md) | Inspecting the hidden context VS Code sends, where `/` commands come from, and the Copilot Harness Builder |
 | [readme-model-training.md](readme-model-training.md) | Fine-tuning your own model and publishing it on Hugging Face |
 | [readme-dev-container-startup.md](readme-dev-container-startup.md) | Running the RAG app in a dev container / GitHub Codespaces |

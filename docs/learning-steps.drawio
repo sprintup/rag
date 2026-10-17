@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net">
   <diagram id="learning-steps" name="Learning steps">
-    <mxGraphModel dx="1645" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="990" math="0" shadow="0">
+    <mxGraphModel dx="1645" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1420" pageHeight="1020" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -41,15 +41,6 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e8" edge="1" parent="step02" source="02_llm2" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" target="02_src2" value="">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="02_pkl" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;index.pkl is a pickle&lt;/b&gt;&lt;br&gt;&lt;i&gt;loading it can run code: only load your own&lt;/i&gt;" vertex="1">
-          <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
-        </mxCell>
-        <mxCell id="02_bind" parent="step02" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Streamlit listens on your network&lt;/b&gt;&lt;br&gt;&lt;i&gt;use --server.address 127.0.0.1&lt;/i&gt;" vertex="1">
-          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
-        </mxCell>
-        <mxCell id="02_pkl_edge" edge="1" parent="step02" source="02_vs" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#cc0000;fontColor=#990000;dashed=1;edgeStyle=orthogonalEdgeStyle;" target="02_pkl" value="saved as">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="title" parent="1" style="text;html=1;fontSize=22;fontStyle=1;align=left;verticalAlign=middle;" value="Local AI in VS Code: six steps, their learning objectives and parts" vertex="1">
@@ -133,7 +124,7 @@
         <mxCell id="e11" edge="1" parent="step03" source="03_server" style="endArrow=block;html=1;rounded=1;fontSize=10;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="03_llm3" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="03_bind" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;No password on local APIs&lt;/b&gt;&lt;br&gt;&lt;i&gt;keep servers on 127.0.0.1 (HOST, OLLAMA_HOST)&lt;/i&gt;" vertex="1">
+        <mxCell id="03_bind" parent="step03" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Local model APIs have no password&lt;/b&gt;&lt;br&gt;&lt;i&gt;keep Ollama on 127.0.0.1 (OLLAMA_HOST, OLLAMA_ORIGINS)&lt;/i&gt;" vertex="1">
           <mxGeometry height="55" width="380" x="20" y="280" as="geometry" />
         </mxCell>
         <mxCell id="step04" parent="1" style="swimlane;html=1;startSize=30;fontSize=14;rounded=1;arcSize=4;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#ffe6cc;collapsible=0;" value="&lt;b&gt;04&lt;/b&gt;&amp;nbsp; Harnesses: Copilot, Claude Code, Codex" vertex="1">
@@ -254,9 +245,6 @@
         <mxCell id="06_pin" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;Pin MCP servers&lt;/b&gt;&lt;br&gt;&lt;i&gt;uvx runs the latest release&lt;/i&gt;" vertex="1">
           <mxGeometry height="55" width="180" x="20" y="280" as="geometry" />
         </mxCell>
-        <mxCell id="06_example" parent="step06" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;fillColor=#fff2f2;strokeColor=#cc0000;fontColor=#990000;strokeWidth=2;" value="⚠ &lt;b&gt;An example, not a product&lt;/b&gt;&lt;br&gt;&lt;i&gt;an adult reviews every activity&lt;/i&gt;" vertex="1">
-          <mxGeometry height="55" width="180" x="220" y="280" as="geometry" />
-        </mxCell>
         <mxCell id="x21" edge="1" parent="1" source="01_models" style="endArrow=block;html=1;dashed=1;fontSize=10;strokeColor=#999999;fontColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.565;entryY=0.96;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;entryPerimeter=0;" target="02_llm2" value="weights">
           <mxGeometry relative="1" x="0.5072" as="geometry">
             <Array as="points">
@@ -279,8 +267,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="safety" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;align=left;verticalAlign=middle;spacingLeft=14;fillColor=#fff2f2;strokeColor=#cc0000;strokeWidth=2;fontColor=#660000;" value="&lt;b&gt;⚠ The three safety rules&lt;/b&gt;&lt;br&gt;1. &lt;b&gt;Disable tools by default.&lt;/b&gt; Start with all tools off (VS Code turns on 118), and enable only what a task needs. Keep approvals on.&lt;br&gt;2. &lt;b&gt;Be careful with .md files from public collections.&lt;/b&gt; Agents, skills, prompt files and instructions are instructions the model obeys. Read the raw file and its tools: list before using it.&lt;br&gt;3. &lt;b&gt;Keep secrets out of the model&#39;s reach.&lt;/b&gt; .gitignore only keeps a file out of Git: an agent can still read .env and send it to a cloud model. Keep secrets outside the project folder, and block reading them in each harness.&lt;br&gt;&lt;i&gt;More: local servers on the network, pickle files, pinned downloads, privacy, logs, credentials, and &quot;an example, not a product&quot; — see readme-safety.md&lt;/i&gt;" vertex="1">
-          <mxGeometry height="130" width="1340" x="40" y="860" as="geometry" />
+        <mxCell id="safety" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=13;align=left;verticalAlign=middle;spacingLeft=14;fillColor=#fff2f2;strokeColor=#cc0000;strokeWidth=2;fontColor=#660000;" value="&lt;b&gt;⚠ The three safety rules&lt;/b&gt;&lt;br&gt;1. &lt;b&gt;Disable tools by default.&lt;/b&gt; Start with all tools off (VS Code turns on 118), and enable only what a task needs. Keep approvals on.&lt;br&gt;2. &lt;b&gt;Be careful with .md files from public collections.&lt;/b&gt; Agents, skills, prompt files and instructions are instructions the model obeys. Read the raw file and its tools: list before using it.&lt;br&gt;3. &lt;b&gt;Keep secrets out of the model&#39;s reach.&lt;/b&gt; .gitignore only keeps a file out of Git: an agent can still read .env and send it to a cloud model. Keep secrets outside the project folder, and block reading them in each harness.&lt;br&gt;&lt;i&gt;More: hidden context, &quot;local&quot; isn&#39;t private, each harness&#39;s own lock, session files and logs, prompt injection, tools acting as you, pinning MCP servers, other people&#39;s repositories, background and cloud agents, local model APIs without passwords, model supply chain — see readme-safety.md&lt;/i&gt;" vertex="1">
+          <mxGeometry height="150" width="1340" x="40" y="860" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

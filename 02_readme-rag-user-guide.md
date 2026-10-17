@@ -169,8 +169,7 @@ the file. A pickle file from someone else is as dangerous as running their progr
 `src/main.py` has to opt in explicitly with `allow_dangerous_deserialization=True` when it loads the
 folder ([src/main.py:142](src/main.py#L142)). Here, it's safe because the app only loads the index
 it built itself. ⚠ **Never load a `vectorstore/` folder you didn't create.** If you're unsure where
-one came from, delete it: the app rebuilds it from `uploaded_docs/`. See
-[readme-safety.md](readme-safety.md), section 2.
+one came from, delete it: the app rebuilds it from `uploaded_docs/`.
 
 ### Step 5 – Retrieving relevant chunks (Component #4)
 When you ask a question, the question is also turned into an embedding. FAISS finds the

@@ -373,7 +373,7 @@ activity for kids.
 > hasn't been reviewed by educators or child-safety specialists, and a small model can suggest
 > wrong definitions or unsuitable or unsafe ideas, even with the toddler-friendly instructions. An
 > adult must review every activity before using it, and supervise. Don't put children's names or
-> personal details into prompts. See [readme-safety.md](readme-safety.md), section 10.
+> personal details into prompts.
 
 ```
 You ──▶ Idea Generator agent (instructions + tools: fetch/*) ──▶ Qwen 3.5 4B (local, GPU)
@@ -759,7 +759,7 @@ This server is a good example of why the safety rules matter:
 - **Review before you approve.** Read every write call (which repository, which issue, what text)
   before clicking **Allow**.
 
-More: [readme-safety.md](readme-safety.md), sections 7 and 8.
+More: [readme-safety.md](readme-safety.md), sections 6 and 7.
 
 ---
 

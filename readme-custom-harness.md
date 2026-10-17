@@ -239,7 +239,7 @@ When you build the harness, the protections other harnesses have are **your** jo
   its own script.
 - **Session files and logs keep prompts.** If you save sessions, store them in the extension's
   storage folder, and give users a way to delete them.
-- **Keep servers on `127.0.0.1`** ([readme-safety.md](readme-safety.md), section 1).
+- **Keep model servers on `127.0.0.1`:** they have no password ([readme-safety.md](readme-safety.md), section 11).
 
 ---
 

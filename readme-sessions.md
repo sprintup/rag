@@ -54,7 +54,7 @@ in its own way:
 | **Session storage** | `%APPDATA%\Code\User\workspaceStorage\<id>\chatSessions\*.jsonl` | `~/.claude/projects/<folder>/<session>.jsonl` | `~/.codex/sessions/`, one `rollout-….jsonl` per session | None: memory only |
 | **Going back to a session** | The **Sessions** list | `/resume`, or `claude --continue` in a terminal | `codex resume` | Not possible |
 | **When the context is full** | Automatic summary (*"Compacted conversation"*) | Automatic, or `/compact` | Automatic, or `/compact` | The server cuts it: the TinyLlama server drops the oldest messages, Ollama cuts the prompt |
-| **Utility (background) model** | Yes: titles, compaction, tool selection. May be a **GitHub cloud model** even when your main model is local (settings in [readme-safety.md](readme-safety.md), section 5) | Yes: a small, fast model (Haiku by default) for background jobs. Pointed at Ollama, it must be changed too (`ANTHROPIC_DEFAULT_HAIKU_MODEL`) | Mostly the main model; `/review` can use its own `review_model` | None |
+| **Utility (background) model** | Yes: titles, compaction, tool selection. May be a **GitHub cloud model** even when your main model is local (settings in [readme-safety.md](readme-safety.md), section 2) | Yes: a small, fast model (Haiku by default) for background jobs. Pointed at Ollama, it must be changed too (`ANTHROPIC_DEFAULT_HAIKU_MODEL`) | Mostly the main model; `/review` can use its own `review_model` | None |
 | **Tools** | Built-in, from extensions, and MCP (`.vscode/mcp.json`); chosen in **Configure Tools** | Built-in (read, edit, shell, web, …) and MCP (`.mcp.json`) | Shell, apply patch, … and MCP (`config.toml`) | None |
 | **Permissions** | Approvals per tool; `chat.tools.global.autoApprove`; terminal sandbox and network filter settings | Permission modes (default, accept edits, plan, bypass) and allow/deny rules in `.claude/settings.json` | `approval_policy` and `sandbox_mode` (read-only, workspace-write, full access) in `config.toml` | Nothing to permit |
 | **⚠ Security points** | 118 tools on by default (rule 1); utility jobs may go to the cloud; `.github/` files in a cloned repo bring skills, agents and instructions | "Bypass permissions" (`--dangerously-skip-permissions`) removes every check; a cloned repo's `.claude/settings.json` can add hooks and permissions | Full access (`--dangerously-bypass-approvals-and-sandbox`) removes the sandbox; a cloned repo's `.codex/` folder can change settings | Plain text only, so replies can't inject HTML; listens only to `127.0.0.1` |
@@ -128,7 +128,7 @@ grows by two with each question.
 - **The Sessions list**, at the left of the Chat view. In the screenshot it shows *"No matching
   sessions"* because a filter is on (the funnel icon); **Reset Filter** shows them all.
 - **The title** at the top of the conversation (*"Local · User greeting"*). It's a **utility
-  model** job (see section 5 of [readme-safety.md](readme-safety.md)): VS Code asked a model to
+  model** job (see section 2 of [readme-safety.md](readme-safety.md)): VS Code asked a model to
   name the session.
 - **The session file on disk.** VS Code saves each session of a workspace as a `.jsonl` file named
   after the session ID:
@@ -149,7 +149,7 @@ runs in a separate agent process, which keeps its own copy of the history.
 
 > **Privacy:** session files keep your full prompts and attachments on disk, even with a local
 > model. Delete sessions you don't need from the Sessions list. See
-> section 6 of [readme-safety.md](readme-safety.md).
+> section 5 of [readme-safety.md](readme-safety.md).
 
 ---
 

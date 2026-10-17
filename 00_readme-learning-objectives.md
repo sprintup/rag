@@ -111,8 +111,8 @@ Supporting points along the way:
 - ⚠ This is an example project, not a product: an adult reviews every generated activity before
   it's used with children. *(Step 06)*
 
-All safety and security points, including local servers on the network, pinning downloads,
-privacy, logs and credentials, are collected in [readme-safety.md](readme-safety.md).
+The safety concerns around AI harnesses, their tools and the models they use are collected in
+[readme-safety.md](readme-safety.md).
 
 ---
 
@@ -231,7 +231,7 @@ server once (model loading takes 10–30 seconds).
 ## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (13 minutes)
 
 Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8),
-[readme-sessions.md](readme-sessions.md), and section 11 of [readme-safety.md](readme-safety.md)
+[readme-sessions.md](readme-sessions.md), and section 3 of [readme-safety.md](readme-safety.md)
 
 **Learning objectives:**
 1. **Distinguish** what the `@`, `/` and `#` operators do, and **recognize** that each **harness**

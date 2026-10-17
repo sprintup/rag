@@ -379,7 +379,7 @@ Codex keep their own session lists in their tabs.
 |---|---|---|---|
 | **Which model** | A **utility model**, which may be a GitHub cloud model even when your main model is local | A small, fast model, Haiku by default | Mostly the main model |
 | **Jobs** | Titles, summarizing long chats, choosing tools; experimentally, keeping a to-do list (`backgroundTodoAgent`) | Titles, summaries and other quick jobs | Summarizing long chats; `/review` can use its own `review_model` |
-| **Keeping it local** | `chat.byokUtilityModelDefault`, `chat.useCopilotModelsForUtilityModels` ([readme-safety.md](readme-safety.md), section 5) | `ANTHROPIC_DEFAULT_HAIKU_MODEL` pointed at the local model (section 8) | Nothing extra; it uses the model you set |
+| **Keeping it local** | `chat.byokUtilityModelDefault`, `chat.useCopilotModelsForUtilityModels` ([readme-safety.md](readme-safety.md), section 2) | `ANTHROPIC_DEFAULT_HAIKU_MODEL` pointed at the local model (section 8) | Nothing extra; it uses the model you set |
 
 More on how each one keeps and trims the conversation:
 [readme-sessions.md](readme-sessions.md), section 2.
@@ -565,7 +565,7 @@ different harnesses, connected in different ways.
 
 | | How to connect Qwen | Tried here |
 |---|---|---|
-| **Extension** (Chat tab) | Install the **Ollama** extension, add `qwen3.5:4b` in the model picker (**Manage Models…**), and choose it in a **Local** session. Full steps: [05_readme-models.md](05_readme-models.md). Also set the utility model settings, so background jobs stay local ([readme-safety.md](readme-safety.md), section 5). | **Yes**, in Ask and Agent mode |
+| **Extension** (Chat tab) | Install the **Ollama** extension, add `qwen3.5:4b` in the model picker (**Manage Models…**), and choose it in a **Local** session. Full steps: [05_readme-models.md](05_readme-models.md). Also set the utility model settings, so background jobs stay local ([readme-safety.md](readme-safety.md), section 2). | **Yes**, in Ask and Agent mode |
 | **CLI** (Copilot CLI) | Install it (`npm install -g @github/copilot`), then run `ollama launch copilot`, which starts it already connected to Ollama. | No |
 
 #### Claude Code
@@ -663,7 +663,7 @@ vendor's servers for a cloud model.
 - **With a cloud model,** all of it leaves your computer: your instruction files, the names of your
   skills, your folder layout and git status, and every attached or `@` file.
 - **With a local model,** it stays on your computer, apart from any background jobs that go to the
-  cloud (section 5 of [readme-safety.md](readme-safety.md)).
+  cloud (section 2 of [readme-safety.md](readme-safety.md)).
 - **Instruction files and skills are obeyed like your own words.** Whatever is in them is in every
   request, including anything injected into a file from a public collection
   ([06_readme-mcp-agents.md](06_readme-mcp-agents.md)).
@@ -696,7 +696,7 @@ How each harness can block it:
 **The fix that works everywhere:** keep secrets **outside the project folder**, e.g. as Windows
 environment variables or in a secrets manager. Also don't attach `.env` or leave it open in the
 editor while chatting. The full list, with what each layer covers:
-[readme-safety.md](readme-safety.md), section 11.
+[readme-safety.md](readme-safety.md), section 3.
 
 ---
 
