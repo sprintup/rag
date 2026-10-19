@@ -23,6 +23,22 @@ Do these in order, about 15–20 minutes before presenting. The times in each st
       second VS Code window, a browser, Resource Monitor and terminals.
 - [ ] Raise the font size in VS Code (`Ctrl+=`) and in the terminals, so the audience can read them.
 - [ ] All work committed (`git status` is clean). Steps 03–04 switch to an older commit.
+- [ ] All work **pushed**, so your codespace can get it.
+
+**Live Q&A (in your codespace)** ([readme-live-qa.md](readme-live-qa.md), section 2)
+
+It runs in the codespace, not on this computer, so switching commits for steps 03–04 doesn't
+affect it.
+- [ ] Start the codespace, then in its terminal: `git pull`, `pip install -r requirements.txt`, and
+      `streamlit run src/live_qa.py`. The page shouldn't show *"This app needs Streamlit 1.39"*.
+- [ ] Make the port public: `bash .devcontainer/share-live-qa.sh public`. Put the address
+      (`https://<codespace-name>-8501.app.github.dev`) in the Zoom chat or on a slide.
+- [ ] **⚙️ Admin:** **🔄 Restart the class** (module 01, timer at 0:00), **🧠 Think** off,
+      **🔍 Show context** on.
+- [ ] Ask one test question, then open its **🔍 Context**: it should say *Budget: 16,384 tokens*. If
+      it says 4,096, see the troubleshooting table in [readme-live-qa.md](readme-live-qa.md).
+- [ ] Ask a question for step 03's 🔍 Context demo, e.g. *"How does the RAG app find the passages it
+      sends to the model?"*, so an answer is ready to open.
 
 **Step 01–02 (TinyLlama, RAG)**
 - [ ] `.\venv_rag\Scripts\Activate.ps1` in a terminal.
@@ -60,8 +76,13 @@ not used after step 04.
 Models, `uploaded_docs/` and `vectorstore/` aren't in git, so they stay as they are.
 
 **This plan isn't in that older commit,** nor are steps 05–06's files, so they disappear from VS Code
-until you switch back. Keep this plan open somewhere else during steps 03–04: on GitHub after you
-push, in a browser, or printed.
+until you switch back. Neither are the guides step 04 shows tables from. Before switching, open
+these on GitHub (the `main` branch) in the browser, and keep them open during steps 03–04:
+- [ ] this plan;
+- [ ] [04_readme-harness.md](04_readme-harness.md), sections 7 and 8 (the operators table and the
+      hidden-context table; the older commit's copy stops at section 6);
+- [ ] [readme-sessions.md](readme-sessions.md), section 2 (the context table);
+- [ ] [readme-safety.md](readme-safety.md), section 3 (rule 3).
 
 **Step 05 (Qwen in Ollama)**
 - [ ] Ollama running (tray icon), with the context window set (`OLLAMA_CONTEXT_LENGTH`).
@@ -113,6 +134,29 @@ Supporting points along the way:
 
 The safety concerns around AI harnesses, their tools and the models they use are collected in
 [readme-safety.md](readme-safety.md).
+
+---
+
+## Before step 01 – The live Q&A: how the class asks questions (3 minutes)
+
+Guide: [readme-live-qa.md](readme-live-qa.md)
+
+The class asks questions throughout the talk in a shared page, answered by **Envie**: Qwen 3.5 4B
+in Ollama, in your codespace, answering only from this project's files. Share the address, have
+everyone open it, and show:
+
+| Time | What you do | What to point out |
+|---|---|---|
+| 1 min | The page: the module's **learning objectives** at the top, the chat, the question box, and the left pane (Answered, Now answering, Question queue). | Everyone sees the same chat. **Questions are anonymous:** ask at your own level. Your own questions are highlighted in blue. |
+| 1 min | Ask a question in the box; click **Ask** next to an objective; collapse an objective. | Envie answers one question at a time, from the queue. **Ask** queues a question about that objective and its demo. Collapsing an objective ticks it off in your own checklist. |
+| 1 min | In the queue, **👍** a question; under an answer, **↩ Reply**, **👍 / 👎**; **🤖 Gen question** under Now answering. | The most-voted question is answered next. **↩ Reply** follows up on an answer. 👎 marks an answer that missed: you'll go through those after the demos. **🤖 Gen question** (only while Envie is idle) has Envie ask about the open objectives. |
+
+**During the talk:** at the start of each step, **⚙️ Admin → ⏭ Next Module** moves everyone to that
+module's objectives and starts its timer (⏱ in the left pane, red past 10 minutes). **⏹ Stop**
+ends an answer that's going wrong.
+
+**Afterwards:** export the conversation (**⬇ Export**, top right), go through the 👎 answers, and
+make the port private again: `bash .devcontainer/share-live-qa.sh private`.
 
 ---
 
@@ -184,10 +228,11 @@ TinyLlama is inconsistent.
 
 ---
 
-## Step 03 – Serving inference: how model providers do it, in miniature (8 minutes)
+## Step 03 – Serving inference: how model providers do it, in miniature (10 minutes)
 
-Guides: [03_readme-plugin-startup.md](03_readme-plugin-startup.md) and the server,
-[src/inference_server.py](src/inference_server.py)
+Guides: [03_readme-plugin-startup.md](03_readme-plugin-startup.md), the server,
+[src/inference_server.py](src/inference_server.py), and section 9 of
+[readme-context.md](readme-context.md) (context engineering)
 
 **Learning objectives:**
 1. **Describe** how frontier model providers serve inference: the model runs on their servers
@@ -221,17 +266,21 @@ Guides: [03_readme-plugin-startup.md](03_readme-plugin-startup.md) and the serve
 | 2 min | **Terminal → Run Task… → Run TinyLlama Plugin**, then `Ctrl+Shift+P` → **TinyLlama: Open Chat**. Ask *"What is a stack?"* with the server terminal side by side. | A `Request:` line appears, and the answer streams in: one HTTP request, one streamed response. |
 | 2 min | Point at the panel: a text box and Send / Stop / Clear, but **no Add Context, no paperclip, no `#`**. Ask *"What's in readme.md?"*, and point at the server log's prompt size: a few hundred tokens. | It can't know: nothing but your typed text is sent. The opposite extreme: Copilot's harness adds about 9,000 tokens of its own context to "Hello?" (shown in step 05's Chat Debug View), more than TinyLlama's whole 2,048-token window. |
 | 2 min | `Ctrl+C` the server, ask again; restart it, ask again. Then open Copilot Chat's model picker. | *"Couldn't reach the TinyLlama server"*: the answers come only from this program. TinyLlama isn't in the model picker: our server isn't a supported provider, while Ollama's models are (step 05). |
+| 2 min | In the live Q&A, open **🔍 Context** on the question you asked beforehand. Show the **budget** bar, then open the six parts: system prompt, prompt, project instructions, tool descriptions, message history, tool results. Show readme-context.md section 9 in the browser. | A middle ground between the panel and Copilot: Envie's app fills the request itself. Of about 3,600 tokens, the question is about 20; the rest is the system prompt, the session state and the sources it retrieved. **Tool descriptions: 0**, as Envie has no tools; Copilot's are often the biggest part. Deciding what fills the budget is **context engineering**. |
 
 **Prepare beforehand:** switch to the TinyLlama commit, `git switch --detach 378b56c` (see the
 pre-flight checklist), so the plugin uses TinyLlama through `src/inference_server.py`. Start the
-server once (model loading takes 10–30 seconds).
+server once (model loading takes 10–30 seconds). In the live Q&A, have an answered question with
+**🔍 Context** ready (pre-flight checklist).
 
 ---
 
 ## Step 04 – Harnesses: Copilot, Claude Code and Codex, and what they do with context (13 minutes)
 
 Guides: [04_readme-harness.md](04_readme-harness.md) (sections 7 and 8),
-[readme-sessions.md](readme-sessions.md), and section 3 of [readme-safety.md](readme-safety.md)
+[readme-sessions.md](readme-sessions.md), [readme-orchestration.md](readme-orchestration.md) (how
+agents work together), and section 3 of [readme-safety.md](readme-safety.md). During this step, open
+them on GitHub in the browser: the older commit doesn't have them.
 
 **Learning objectives:**
 1. **Distinguish** what the `@`, `/` and `#` operators do, and **recognize** that each **harness**
@@ -343,13 +392,14 @@ changes daily.
 
 | Step | Minutes | Learning objectives |
 |---|---|---|
+| Live Q&A intro | 3 | (none: how the class asks questions) |
 | 01 Setup | 10 | Describe training vs. inference · Explain what Ollama abstracts away · ⚠ Explain a model's supply chain and bias |
 | 02 RAG | 10 | Describe the RAG steps · Explain sources · Demonstrate local inference |
-| 03 Serving inference | 8 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
+| 03 Serving inference | 10 | Describe API serving · Explain who fills the request (no context vs. a harness's context) · Explain stopping the server, and supported providers |
 | 04 Harnesses | 13 | Distinguish @, / and # per harness · ⚠ Compare context handling and orchestration · Explain local models and CLI vs. tab · ⚠ Explain what leaves your computer, and keeping secrets out |
 | 05 Models | 10 | Compare models by version, size and origin · Explain tool conditions · ⚠ Explain tools off by default |
 | 06 MCP and agents | 10 | Describe MCP · Distinguish instruction files · ⚠ Describe injections in public `.md` files |
-| **Total** | **61** | 19 objectives |
+| **Total** | **66** | 19 objectives |
 
 **For a quick check of learning,** ask participants at the end of each step to explain one objective
 to the person next to them in one minute. End with the three safety rules: they should be able to
