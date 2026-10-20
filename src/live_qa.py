@@ -2635,14 +2635,18 @@ st.markdown("""<style>
 [data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] {width: 100% !important;}
 [data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]) {
   flex: 1 1 0 !important; width: auto !important; min-width: 0 !important;}
-[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):has(button) {
+/* In these rows the first column is the text (a caption) and every column after it a button, e.g.
+   🔍 Context, or ↩ Reply 👍 👎: the buttons keep their own width, together at the right end (the
+   second column takes any space left over on its left). Chosen by position: a rule that picks the
+   column holding a button (:has) didn't take effect in every browser. */
+[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):not(:first-child) {
   flex: 0 0 auto !important;}
-/* The buttons always together at the right end, e.g. 🔍 Context, whatever width the text beside them
-   takes: the first button's column takes any space left over on its left */
-[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):has(button):not(:is([data-testid="column"], [data-testid="stColumn"]):has(button) ~ *) {
+[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):nth-child(2) {
   margin-left: auto !important;}
-[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):has(button) :is(.stButton, [data-testid="stButton"]) {
-  display: flex; justify-content: flex-end;}
+/* Streamlit fixes each button's and caption's width in pixels at its column's width when first drawn;
+   their own width instead, or a button column drawn wide once stays wide */
+[data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] :is(.stButton, [data-testid="stButton"],
+    .stMarkdown, [data-testid="stMarkdown"], [data-testid="stCaption"], .stCaption) {width: auto !important; max-width: 100%;}
 [data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] button {padding: 0.15rem 0.6rem; min-height: 0;}
 [data-testid="stChatMessage"] [data-testid="stHorizontalBlock"] [data-testid="stCaptionContainer"] {margin: 0;}
 </style>""", unsafe_allow_html=True)
@@ -2706,8 +2710,16 @@ span[id^="q-"] {display: block; scroll-margin-top: calc(45vh + 1rem);}   /* belo
     [data-testid="stElementContainer"], [data-testid="stHorizontalBlock"]) {width: 100% !important;}
 [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]) {
   flex: 1 1 0 !important; width: auto !important; min-width: 0 !important;}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):last-child:has(button) {
+/* The first column is the objective; every column after it, a button that keeps its own width.
+   Chosen by position: a rule that picks the column holding a button (:has) didn't take effect in
+   every browser. */
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):not(:first-child) {
   flex: 0 0 auto !important;}
+/* Streamlit also fixes each button's and each text's width, in pixels, at its column's width when
+   first drawn (style="width: 621px"). If a column was ever drawn wide, e.g. during a slow first load,
+   the Ask column then stayed half the row and the text half of it. Their own width instead. */
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] :is(.stButton, [data-testid="stButton"],
+    .stMarkdown, [data-testid="stMarkdown"]) {width: auto !important; max-width: 100%;}
 [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > :last-child button p {white-space: nowrap;}
 /* Each objective's title (▼ / ▶) is a button, so the app knows which are expanded; it looks like a heading */
 [data-testid="stExpander"] [data-testid="stHorizontalBlock"] > :is([data-testid="column"], [data-testid="stColumn"]):first-child button {
